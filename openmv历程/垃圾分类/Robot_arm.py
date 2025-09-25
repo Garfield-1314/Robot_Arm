@@ -8,6 +8,29 @@ Actuator = 0
 
 ON = 1
 
+"""
+机械臂只可在第一、二、三象限活动,第四象限由于Z轴限位开关阻挡的原因无法活动。
+Y轴正方向为机械臂正前方
+X轴正方向为机械臂右侧
+Z轴正方向为机械臂向上
+"""
+
+# 机械臂活动范围参数
+# h_max/h_min: Z轴（垂直方向）最大/最小高度
+# x_max/x_min: X轴（左右方向）最大/最小坐标
+# y_max/y_min: Y轴（前后方向）最大/最小坐标
+# Servo_max/Servo_min: 舵机夹爪最小/最大角度
+
+h_max = 307
+h_min = 17
+x_max = 280
+x_min = -280
+y_max = 280
+y_min = -280
+Servo_max = 60
+Servo_min = 0
+
+
 def parse_position(data):
     """
     解析位置字符串并返回坐标字典
@@ -80,13 +103,15 @@ class Robot:
 
         elif 2 > ad > 1.7:
             # print("Open")
-            self.mv_servo(0)  # 示例：张开夹爪
+            self.angle = self.angle - 1
+            self.mv_servo(self.angle)   # 示例：闭合夹爪
         elif 2.4 > ad > 2:
             # print("Close")
-            self.mv_servo(60)   # 示例：闭合夹爪
+            self.angle = self.angle + 1
+            self.mv_servo(self.angle)   # 示例：闭合夹爪
         elif 2.7 > ad > 2.4:
             # print("Home")
-            self.home_seting() # 示例：机械臂复位
+            self.home_setting() # 示例：机械臂复位
             time.sleep_ms(1000)
         time.sleep_ms(100)
         self.set_xyz_point(self.x, self.y, self.z, 0, 0)
@@ -95,13 +120,14 @@ class Robot:
     def __init__(self, nums):
         self.uart1 = UART(nums, 115200, timeout_char=1)
         self.servo = Servo(1)
-        self.servo.angle(45)
+        self.angle = 45
+        self.servo.angle(self.angle)
         self.adc = ADC("P6")  # ADC初始化，必须为"P6"
         self.x = 0
         self.y = 174
         self.z = 277
 
-    def home_seting(self):
+    def home_setting(self):
         data_to_send = "G28\r\n"
         print(data_to_send, "复位......")
         self.uart1.write(data_to_send)

@@ -36,10 +36,7 @@ a = 0
 while True:
     
     while True:
-        
-        # # clock.tick()
         img = sensor.snapshot()
-        # print(clock.fps())
         for c in img.find_circles(threshold = 2000, x_margin = 10, y_margin = 10, r_margin = 10,r_min = 2, r_max = 100, r_step = 2,roi = ROI):
             area = (c.x()-c.r(), c.y()-c.r(), 2*c.r(), 2*c.r())
             #area为识别到的圆的区域，即圆的外接矩形框

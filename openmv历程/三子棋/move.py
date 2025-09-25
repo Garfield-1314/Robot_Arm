@@ -4,7 +4,7 @@ import time
 
 robot = rb.Robot(3) #初始化，设置串口3为机械臂通讯串口。
 print(robot)
-Actuator = 55
+Actuator = 50
 def get_qizi(num):
     if num == 0:
         robot.mv_servo(40)
@@ -24,7 +24,7 @@ def get_qizi(num):
         roboty = 108
         robot.set_xyz_point(robotx,roboty,20+Actuator,0,0)
         time.sleep_ms(1000)
-        robot.mv_servo(70)
+        robot.mv_servo(65)
         time.sleep_ms(1000)
         robotx = 98
         roboty = 108
@@ -42,17 +42,17 @@ def get_qizi(num):
         robot.set_xyz_point(robotx,roboty,40+Actuator,0,0)
         time.sleep_ms(1000)
         robotx = 93
-        roboty = 134
+        roboty = 134+5
         robot.set_xyz_point(robotx,roboty,40+Actuator,0,0)
         time.sleep_ms(1000)
         robotx = 93
-        roboty = 134
+        roboty = 134+5
         robot.set_xyz_point(robotx,roboty,20+Actuator,0,0)
         time.sleep_ms(1000)
-        robot.mv_servo(70)
+        robot.mv_servo(65)
         time.sleep_ms(1000)
         robotx = 93
-        roboty = 134
+        roboty = 134+5
         robot.set_xyz_point(robotx,roboty,100+Actuator,0,0)
         time.sleep_ms(1000)
 
@@ -67,17 +67,17 @@ def get_qizi(num):
         robot.set_xyz_point(robotx,roboty,40+Actuator,0,0)
         time.sleep_ms(1000)
         robotx = 90
-        roboty = 167
+        roboty = 167+5
         robot.set_xyz_point(robotx,roboty,40+Actuator,0,0)
         time.sleep_ms(1000)
         robotx = 90
-        roboty = 167
+        roboty = 167+5
         robot.set_xyz_point(robotx,roboty,20+Actuator,0,0)
         time.sleep_ms(1000)
-        robot.mv_servo(70)
+        robot.mv_servo(65)
         time.sleep_ms(1000)
         robotx = 90
-        roboty = 167
+        roboty = 167+5
         robot.set_xyz_point(robotx,roboty,100+Actuator,0,0)
         time.sleep_ms(1000)
 
@@ -92,17 +92,17 @@ def get_qizi(num):
         robot.set_xyz_point(robotx,roboty,40+Actuator,0,0)
         time.sleep_ms(1000)
         robotx = 94
-        roboty = 197
+        roboty = 197+5
         robot.set_xyz_point(robotx,roboty,40+Actuator,0,0)
         time.sleep_ms(1000)
         robotx = 94
-        roboty = 197
+        roboty = 197+5
         robot.set_xyz_point(robotx,roboty,20+Actuator,0,0)
         time.sleep_ms(1000)
-        robot.mv_servo(70)
+        robot.mv_servo(65)
         time.sleep_ms(1000)
         robotx = 94
-        roboty = 197
+        roboty = 197+5
         robot.set_xyz_point(robotx,roboty,100+Actuator,0,0)
         time.sleep_ms(1000)
 
@@ -117,17 +117,17 @@ def get_qizi(num):
         robot.set_xyz_point(robotx,roboty,40+Actuator,0,0)
         time.sleep_ms(1000)
         robotx = 90
-        roboty = 226
+        roboty = 226+5
         robot.set_xyz_point(robotx,roboty,40+Actuator,0,0)
         time.sleep_ms(1000)
         robotx = 90
-        roboty = 226
+        roboty = 226+5
         robot.set_xyz_point(robotx,roboty,20+Actuator,0,0)
         time.sleep_ms(1000)
-        robot.mv_servo(70)
+        robot.mv_servo(65)
         time.sleep_ms(1000)
         robotx = 90
-        roboty = 226
+        roboty = 226+5
         robot.set_xyz_point(robotx,roboty,100+Actuator,0,0)
         time.sleep_ms(1000)
 
@@ -152,7 +152,7 @@ def move2pan(x,y):
         time.sleep_ms(1000)
         robot.set_xyz_point(robotx,roboty,20+Actuator,0,0)
         time.sleep_ms(1200)
-        robot.mv_servo(57)
+        robot.mv_servo(60)
         time.sleep_ms(1000)
         robot.set_xyz_point(0,174,220+Actuator,0,0)
         time.sleep_ms(1000)
@@ -164,7 +164,7 @@ def move2pan(x,y):
         time.sleep_ms(1000)
         robot.set_xyz_point(robotx,roboty,20+Actuator,0,0)
         time.sleep_ms(1200)
-        robot.mv_servo(57)
+        robot.mv_servo(60)
         time.sleep_ms(1000)
         robot.set_xyz_point(0,174,220+Actuator,0,0)
         time.sleep_ms(1000)
@@ -176,7 +176,7 @@ def move2pan(x,y):
         time.sleep_ms(1000)
         robot.set_xyz_point(robotx,roboty,20+Actuator,0,0)
         time.sleep_ms(1200)
-        robot.mv_servo(57)
+        robot.mv_servo(60)
         time.sleep_ms(1000)
         robot.set_xyz_point(0,174,220+Actuator,0,0)
         time.sleep_ms(1000)
@@ -188,7 +188,7 @@ def move2pan(x,y):
         time.sleep_ms(1000)
         robot.set_xyz_point(robotx,roboty,20+Actuator,0,0)
         time.sleep_ms(1200)
-        robot.mv_servo(57)
+        robot.mv_servo(60)
         time.sleep_ms(1000)
         robot.set_xyz_point(0,174,220+Actuator,0,0)
         time.sleep_ms(1000)
@@ -200,7 +200,7 @@ def move2pan(x,y):
         time.sleep_ms(1000)
         robot.set_xyz_point(robotx,roboty,20+Actuator,0,0)
         time.sleep_ms(1200)
-        robot.mv_servo(57)
+        robot.mv_servo(60)
         time.sleep_ms(1000)
         robot.set_xyz_point(0,174,220+Actuator,0,0)
         time.sleep_ms(1000)
@@ -212,7 +212,7 @@ def move2pan(x,y):
         time.sleep_ms(1000)
         robot.set_xyz_point(robotx,roboty,20+Actuator,0,0)
         time.sleep_ms(1200)
-        robot.mv_servo(57)
+        robot.mv_servo(60)
         time.sleep_ms(1000)
         robot.set_xyz_point(0,174,220+Actuator,0,0)
         time.sleep_ms(1000)
@@ -224,7 +224,7 @@ def move2pan(x,y):
         time.sleep_ms(1000)
         robot.set_xyz_point(robotx,roboty,20+Actuator,0,0)
         time.sleep_ms(1200)
-        robot.mv_servo(57)
+        robot.mv_servo(60)
         time.sleep_ms(1000)
         robot.set_xyz_point(0,174,220+Actuator,0,0)
         time.sleep_ms(1000)
@@ -236,7 +236,7 @@ def move2pan(x,y):
         time.sleep_ms(1000)
         robot.set_xyz_point(robotx,roboty,20+Actuator,0,0)
         time.sleep_ms(1200)
-        robot.mv_servo(57)
+        robot.mv_servo(60)
         time.sleep_ms(1000)
         robot.set_xyz_point(0,174,220+Actuator,0,0)
         time.sleep_ms(1000)

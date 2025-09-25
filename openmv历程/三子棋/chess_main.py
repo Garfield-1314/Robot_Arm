@@ -1,6 +1,6 @@
 # main.py
 import sensor, time,ml
-from pyb import Pin
+from pyb import Pin,ADC
 import Robot_arm as rb
 import chess
 import move
@@ -9,7 +9,7 @@ Actuator = 55
 
 robot = rb.Robot(3) #初始化，设置串口3为机械臂通讯串口。
 print(robot)
-robot.home_seting()   #机械臂复位，复位运行时若有异常请重启机械臂后再次运行
+# robot.home_seting()   #机械臂复位，复位运行时若有异常请重启机械臂后再次运行
 robot.set_xyz_point(0,174,220+Actuator,0,0)
 time.sleep_ms(1000)
 
@@ -20,12 +20,12 @@ sensor.skip_frames(time = 2000)
 
 
 # 轻触开关
-pin0 = Pin('P0', Pin.IN, Pin.PULL_UP)
+adc = ADC("P6")  # ADC初始化，必须为"P6"
 
 
-distance = 37
+distance = 47
 block = 32
-ShiftX = 20
+ShiftX = 50
 ShiftY = 0
 
 # 生成九宫格的区域位置
@@ -73,13 +73,14 @@ board = [
 
 #等开关按下并松开
 def wait_key():
-    while pin0.value():
+    ad = ((adc.read() * 3.3) / 4095)
+    while ad > 0.5:
+        ad = ((adc.read() * 3.3) / 4095)
+        # print(ad)
         img = sensor.snapshot()
         for y in range(len(rois)):
             for x in range(len(rois[y])):
                 img.draw_rectangle(rois[y][x])
-    while not pin0.value():
-        time.sleep_ms(1)
 
 with open('labels_color.txt','r') as file:
     labels = [line.strip()for line in file if line.strip()]

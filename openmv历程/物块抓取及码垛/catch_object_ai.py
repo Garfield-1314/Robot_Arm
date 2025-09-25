@@ -12,20 +12,15 @@ sensor.skip_frames(time=2000)          # Let the camera adjust.
 robot = rb.Robot(3) #初始化，设置串口3为机械臂通讯串口。
 print(robot)
 
-net = None
-labels = None
 min_confidence = 0.5
 
-try:
-    # load the model, alloc the model file on the heap if we have at least 64K free after loading
-    net = ml.Model("trained.tflite", load_to_fb=uos.stat('trained.tflite')[6] > (gc.mem_free() - (64*1024)))
-except Exception as e:
-    raise Exception('Failed to load "trained.tflite", did you copy the .tflite and labels.txt file onto the mass-storage device? (' + str(e) + ')')
+# load the model, alloc the model file on the heap if we have at least 64K free after loading
+net = ml.Model("trained.tflite", load_to_fb=uos.stat('trained.tflite')[6] > (gc.mem_free() - (64*1024)))
+print(net)
 
-try:
-    labels = [line.rstrip('\n') for line in open("labels.txt")]
-except Exception as e:
-    raise Exception('Failed to load "labels.txt", did you copy the .tflite and labels.txt file onto the mass-storage device? (' + str(e) + ')')
+
+labels = [line.rstrip('\n') for line in open("labels.txt")]
+print(labels)
 
 colors = [ # Add more colors if you are detecting more than 7 types of classes at once.
     (255,   0,   0),
@@ -71,7 +66,7 @@ def fomo_post_process(model, inputs, outputs):
     return l
 
 
-robot.home_seting()   #机械臂复位，复位运行时若有异常请重启机械臂后再次运行
+robot.home_setting()   #机械臂复位，复位运行时若有异常请重启机械臂后再次运行
 robot.mv_servo(0)
 robot.set_xyz_point(0,174,222,0,0)
 time.sleep_ms(1000)
