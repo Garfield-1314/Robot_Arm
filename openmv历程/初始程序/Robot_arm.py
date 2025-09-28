@@ -2,14 +2,14 @@ from pyb import UART,Servo,ADC
 import time , re
 import sensor
 
-base_h = 277 - 120
+base_h = 290 - 172 + 52
 
 Actuator = 0
 
 ON = 1
 
 """
-机械臂只可在第一、二、三象限活动,第四象限由于Z轴限位开关阻挡的原因无法活动。
+机械臂只可在第一、二、三象限活动,第四象限由于Z轴限位开关阻挡的原因无法活动,即270°的旋转范围。
 Y轴正方向为机械臂正前方
 X轴正方向为机械臂右侧
 Z轴正方向为机械臂向上
@@ -21,8 +21,8 @@ Z轴正方向为机械臂向上
 # y_max/y_min: Y轴（前后方向）最大/最小坐标
 # Servo_max/Servo_min: 舵机夹爪最小/最大角度
 
-h_max = 307
-h_min = 17
+h_max = 322
+h_min = 32
 x_max = 280
 x_min = -280
 y_max = 280
@@ -74,10 +74,21 @@ class Robot:
         """
         通过ADC模拟按键控制机械臂动作
         """
-        ad = ((self.adc.read() * 3.3) / 4095)
+        ad_list = []
+        for _ in range(20):
+            ad_list.append((self.adc.read() * 3.3) / 4095)
+            time.sleep_ms(1)
+        ad_list.sort()
+        filtered = ad_list[1:-1]
+        mid_idx = len(filtered) // 2
+        if len(filtered) % 2 == 0:
+            ad = round((filtered[mid_idx - 1] + filtered[mid_idx]) / 2, 2)
+        else:
+            ad = round(filtered[mid_idx], 2)
         # print(ad)
+        # time.sleep_ms(1000)
         # 可根据实际需求调用机械臂动作方法
-        if 0.2 > ad > 0.1:
+        if 0.3 > ad > 0.18:
             # print("Z+")
             self.z = self.z + 2
 
@@ -85,7 +96,7 @@ class Robot:
             # print("Z-")
             self.z = self.z - 2
 
-        elif 1.7 > ad > 1.3:
+        elif 1.7 > ad > 1.4:
             # print("Y+")
             self.y = self.y + 2
 
@@ -93,29 +104,31 @@ class Robot:
             # print("Y-")
             self.y = self.y - 2
 
-        elif 0.7 > ad > 0.4:
+        elif 0.6 > ad > 0.5:
             # print("X+")
             self.x = self.x - 2
 
-        elif 1 > ad > 0.7:
+        elif 1 > ad > 0.8:
             # print("X-")
             self.x = self.x + 2
 
         elif 2 > ad > 1.7:
             # print("Open")
-            self.angle = self.angle - 1
+            self.angle = self.angle - 2
             self.mv_servo(self.angle)   # 示例：闭合夹爪
-        elif 2.4 > ad > 2:
+
+        elif 2.3 > ad > 2.1:
             # print("Close")
-            self.angle = self.angle + 1
+            self.angle = self.angle + 2
             self.mv_servo(self.angle)   # 示例：闭合夹爪
-        elif 2.7 > ad > 2.4:
+
+        elif 2.6 > ad > 2.45:
             # print("Home")
             self.home_setting() # 示例：机械臂复位
             time.sleep_ms(1000)
         time.sleep_ms(100)
         self.set_xyz_point(self.x, self.y, self.z, 0, 0)
-        # self.get_xyz_point()
+        self.get_xyz_point()
 
     def __init__(self, nums):
         self.uart1 = UART(nums, 115200, timeout_char=1)
@@ -125,7 +138,7 @@ class Robot:
         self.adc = ADC("P6")  # ADC初始化，必须为"P6"
         self.x = 0
         self.y = 174
-        self.z = 277
+        self.z = 292
 
     def home_setting(self):
         data_to_send = "G28\r\n"
@@ -139,10 +152,13 @@ class Robot:
                 string_data = data.decode('utf-8').strip()
                 self.x = 0
                 self.y = 174
-                self.z = 277
+                self.z = 292
                 print(string_data)
                 break
             if time.ticks_diff(time.ticks_ms(), start) > timeout:
+                self.x = 0
+                self.y = 174
+                self.z = 292
                 print("复位超时，无数据返回")
                 break
 
