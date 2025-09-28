@@ -2,14 +2,14 @@ from pyb import UART,Servo,ADC
 import time , re
 import sensor
 
-base_h = 277 - 120
+base_h = 290 - 172 + 52
 
 Actuator = 0
 
 ON = 1
 
 """
-机械臂只可在第一、二、三象限活动,第四象限由于Z轴限位开关阻挡的原因无法活动。
+机械臂只可在第一、二、三象限活动,第四象限由于Z轴限位开关阻挡的原因无法活动,即270°的旋转范围。
 Y轴正方向为机械臂正前方
 X轴正方向为机械臂右侧
 Z轴正方向为机械臂向上
@@ -21,8 +21,8 @@ Z轴正方向为机械臂向上
 # y_max/y_min: Y轴（前后方向）最大/最小坐标
 # Servo_max/Servo_min: 舵机夹爪最小/最大角度
 
-h_max = 307
-h_min = 17
+h_max = 322
+h_min = 32
 x_max = 280
 x_min = -280
 y_max = 280
@@ -125,7 +125,7 @@ class Robot:
         self.adc = ADC("P6")  # ADC初始化，必须为"P6"
         self.x = 0
         self.y = 174
-        self.z = 277
+        self.z = 292
 
     def home_setting(self):
         data_to_send = "G28\r\n"
@@ -139,7 +139,7 @@ class Robot:
                 string_data = data.decode('utf-8').strip()
                 self.x = 0
                 self.y = 174
-                self.z = 277
+                self.z = 292
                 print(string_data)
                 break
             if time.ticks_diff(time.ticks_ms(), start) > timeout:

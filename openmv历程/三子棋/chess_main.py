@@ -5,7 +5,7 @@ import Robot_arm as rb
 import chess
 import move
 
-Actuator = 55
+Actuator = 75
 
 robot = rb.Robot(3) #初始化，设置串口3为机械臂通讯串口。
 print(robot)
@@ -106,6 +106,7 @@ def Net(img2):
         # 仅记录置信度高的结果
         if max_score > 0.8:
             results.append(max_label)
+            
 
     # 计算众数（最频繁出现的标签）
     if not results:

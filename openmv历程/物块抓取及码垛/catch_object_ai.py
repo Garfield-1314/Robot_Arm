@@ -6,7 +6,7 @@ import Robot_arm as rb
 sensor.reset()                         # Reset and initialize the sensor.
 sensor.set_pixformat(sensor.RGB565)    # Set pixel format to RGB565 (or GRAYSCALE)
 sensor.set_framesize(sensor.QVGA)      # Set frame size to QVGA (320x240)
-sensor.set_windowing((240, 240))       # Set 240x240 window.
+# sensor.set_windowing((240, 240))       # Set 240x240 window.
 sensor.skip_frames(time=2000)          # Let the camera adjust.
 
 robot = rb.Robot(3) #初始化，设置串口3为机械臂通讯串口。
@@ -66,24 +66,26 @@ def fomo_post_process(model, inputs, outputs):
     return l
 
 
-robot.home_setting()   #机械臂复位，复位运行时若有异常请重启机械臂后再次运行
+# robot.home_setting()   #机械臂复位，复位运行时若有异常请重启机械臂后再次运行
 robot.mv_servo(0)
-robot.set_xyz_point(0,174,222,0,0)
+robot.set_xyz_point(0,174,290,0,0)
 time.sleep_ms(1000)
 
-atxb = -164
-atyb = 147
+Actuator = 50
+
+atxb = -85
+atyb = 226
 b_num = 0
 
-atxy = -168
-atyy = 75
+atxy = -92
+atyy = 162
 y_num = 0
 
-atz = 10
+atz = 18
 
 flag = 0
 
-ROI=(160,120,160,120)
+ROI=(160,120,120,120)
 
 a = 0
 
@@ -110,27 +112,28 @@ while True:
             break
 
     # a = a + 1
-    if flag == "blue" and a >= 20:
+    if flag == "blue\r" and a >= 20:
         time.sleep_ms(1000)
         a=0
         flag = 0
         time.sleep_ms(1000)
         robot.mv_servo(0)
-        robot.set_xyz_point(45,168,atz,0,0)
+        robot.set_xyz_point(35,194,atz+Actuator,0,0)
         time.sleep_ms(1000)
         robot.mv_servo(0)
         time.sleep_ms(1000)
         robot.mv_servo(60)
         time.sleep_ms(1000)
-        robot.set_xyz_point(atxb,atyb,120,0,0)
+        robot.set_xyz_point(atxb,atyb,120+Actuator,0,0)
         time.sleep_ms(1000)
-        robot.set_xyz_point(atxb,atyb,120,0,0)
+        robot.set_xyz_point(atxb,atyb,120+Actuator,0,0)
         time.sleep_ms(1000)
-        robot.set_xyz_point(atxb,atyb,15+b_num*25,0,0)
+        robot.set_xyz_point(atxb,atyb,25+Actuator+b_num*23,0,0)
         time.sleep_ms(1000)
         robot.mv_servo(0)
         time.sleep_ms(1000)
-        robot.set_xyz_point(0,174,222,0,0)
+        robot.set_xyz_point(0,174,240+Actuator,0,0)
+        time.sleep_ms(1000)
         b_num = b_num + 1
 
     if flag == "yellow" and a >= 20:
@@ -139,19 +142,20 @@ while True:
         flag = 0
         time.sleep_ms(1000)
         robot.mv_servo(0)
-        robot.set_xyz_point(45,168,atz,0,0)
+        robot.set_xyz_point(35,194,atz+Actuator,0,0)
         time.sleep_ms(1000)
         robot.mv_servo(0)
         time.sleep_ms(1000)
         robot.mv_servo(60)
         time.sleep_ms(1000)
-        robot.set_xyz_point(atxy,atyy,120,0,0)
+        robot.set_xyz_point(atxy,atyy,120+Actuator,0,0)
         time.sleep_ms(1000)
-        robot.set_xyz_point(atxy,atyy,120,0,0)
+        robot.set_xyz_point(atxy,atyy,120+Actuator,0,0)
         time.sleep_ms(1000)
-        robot.set_xyz_point(atxy,atyy,15+y_num*25,0,0)
+        robot.set_xyz_point(atxy,atyy,25+Actuator+y_num*23,0,0)
         time.sleep_ms(1000)
         robot.mv_servo(0)
         time.sleep_ms(1000)
-        robot.set_xyz_point(0,174,222,0,0)
+        robot.set_xyz_point(0,174,240+Actuator,0,0)
+        time.sleep_ms(1000)
         y_num = y_num + 1
