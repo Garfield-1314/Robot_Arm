@@ -14,6 +14,7 @@ public:
   Servo_Gripper(int pin, float grip_degree, float ungrip_degree);
   void cmdOn();
   void cmdOff();
+  void set_degree(float deg);
   float readDegree();
   bool isOn();
 private:

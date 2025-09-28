@@ -275,6 +275,10 @@ void executeCommand(Cmd cmd) {
       interpolator.setSpeedProfile(cmd.valueS); 
       Logger::logINFO("SPEED PROFILE: [" + String(interpolator.speed_profile) + "]");
       break;
+    case 280:
+      servo_gripper.set_degree(cmd.valueP);
+      Logger::logINFO("SERVO: [" + String(cmd.valueP) + "]");
+      break;
     default: printErr();
     }
   }

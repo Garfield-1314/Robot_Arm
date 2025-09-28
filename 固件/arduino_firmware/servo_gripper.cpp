@@ -16,6 +16,23 @@ Servo_Gripper::Servo_Gripper(int pin, float grip_degree, float ungrip_degree){
   Servo servo_motor;
 }
 
+
+// 新增舵机驱动代码，IO为36
+#if BOARD_CHOICE == WEMOSD1R32
+#include <ESP32Servo.h>
+#else
+#include <Servo.h>
+#endif
+
+
+void Servo_Gripper::set_degree(float deg){
+  servo_motor.attach(servo_pin);
+  delayMicroseconds(10);
+  servo_motor.write(deg);
+  delay(300);
+  //servo_motor.detach();
+}
+
 void Servo_Gripper::cmdOff(){
   servo_motor.attach(servo_pin);
   delayMicroseconds(10);
@@ -25,7 +42,7 @@ void Servo_Gripper::cmdOff(){
 }
 
 void Servo_Gripper::cmdOn(){
-  //servo_motor.attach(servo_pin);
+  servo_motor.attach(servo_pin);
   servo_motor.write(servo_ungrip_deg+10);
   delay(300);
   servo_motor.detach();
@@ -45,3 +62,5 @@ bool Servo_Gripper::isOn(){
     return false;
   }
 }
+
+
