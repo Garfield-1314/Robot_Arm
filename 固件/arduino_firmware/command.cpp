@@ -81,6 +81,7 @@ void Command::value_segment(String msg_segment){
     case 'E': new_command.valueE = msg_value; break;
     case 'F': new_command.valueF = msg_value; break;
     case 'S': new_command.valueS = msg_value; break;
+    case 'P': new_command.valueP = msg_value; break;
   }
 }
 

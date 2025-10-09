@@ -13,6 +13,7 @@ struct Cmd {
   float valueF;
   float valueE;
   float valueS; 
+  float valueP;
 };
 
 class Command {
