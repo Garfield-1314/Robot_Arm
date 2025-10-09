@@ -16,54 +16,29 @@
 #include "endstop.h"
 #include "logger.h"
 #include "fanControl.h"
-//INCLUDE CORRESPONDING GRIPPER MOTOR CLASS
-#if GRIPPER == SERVO
-  #include "servo_gripper.h"
-#elif GRIPPER == BYJ
-  #include "byj_gripper.h"
-#endif
+//INCLUDE SERVO GRIPPER ONLY
+#include "servo_gripper.h"
 
-//DETERMINE PINOUTS & CONFIG TO USE SUBJECT TO BOARD_CHOICE
-#if BOARD_CHOICE == UNO
-  #include "pinout/pinout_uno.h"
-#elif BOARD_CHOICE == WEMOSD1R32
-  #include "pinout/pinout_wemosD1R32.h"
-  #include "config_esp32.h"
-#elif BOARD_CHOICE == MEGA2560
-  #include "pinout/pinout.h"
-#endif
+// ONLY INCLUDE ESP32 PINOUT & CONFIG
+#include "pinout/pinout_wemosD1R32.h"
+#include "config_esp32.h"
 
-//STEPPER OBJECTS
+//STEPPER OBJECTS (ESP32 ONLY)
 RampsStepper stepperHigher(X_STEP_PIN, X_DIR_PIN, X_ENABLE_PIN, INVERSE_X_STEPPER, MAIN_GEAR_TEETH, MOTOR_GEAR_TEETH, MICROSTEPS, STEPS_PER_REV);
 RampsStepper stepperLower(Y_STEP_PIN, Y_DIR_PIN, Y_ENABLE_PIN, INVERSE_Y_STEPPER, MAIN_GEAR_TEETH, MOTOR_GEAR_TEETH, MICROSTEPS, STEPS_PER_REV);
 RampsStepper stepperRotate(Z_STEP_PIN, Z_DIR_PIN, Z_ENABLE_PIN, INVERSE_Z_STEPPER, MAIN_GEAR_TEETH, MOTOR_GEAR_TEETH, MICROSTEPS, STEPS_PER_REV);
-
-//RAIL OBJECTS
 #if RAIL
   RampsStepper stepperRail(E0_STEP_PIN, E0_DIR_PIN, E0_ENABLE_PIN, INVERSE_E0_STEPPER, MAIN_GEAR_TEETH, MOTOR_GEAR_TEETH, MICROSTEPS, STEPS_PER_REV);
-  #if BOARD_CHOICE == WEMOSD1R32 //PINSWAP REQIURED ON D1R32 DUE TO INSUFFICIENT DIGIAL PINS
-    #define SERVO_PIN 23 // REDEFINE SERVO_PIN FOR RAIL // SHARE WITH Z_MIN_PIN
-    Endstop endstopE0(E0_MIN_PIN, E0_DIR_PIN, E0_STEP_PIN, E0_ENABLE_PIN, E0_MIN_INPUT, E0_HOME_STEPS, HOME_DWELL, false);
-  #else 
-    Endstop endstopE0(E0_MIN_PIN, E0_DIR_PIN, E0_STEP_PIN, E0_ENABLE_PIN, E0_MIN_INPUT, E0_HOME_STEPS, HOME_DWELL, false);
-  #endif
+  #define SERVO_PIN 23 // REDEFINE SERVO_PIN FOR RAIL // SHARE WITH Z_MIN_PIN
+  Endstop endstopE0(E0_MIN_PIN, E0_DIR_PIN, E0_STEP_PIN, E0_ENABLE_PIN, E0_MIN_INPUT, E0_HOME_STEPS, HOME_DWELL, false);
 #endif
-
-//ENDSTOP OBJECTS
+//ENDSTOP OBJECTS (ESP32 ONLY)
 Endstop endstopX(X_MIN_PIN, X_DIR_PIN, X_STEP_PIN, X_ENABLE_PIN, X_MIN_INPUT, X_HOME_STEPS, HOME_DWELL, false);
 Endstop endstopY(Y_MIN_PIN, Y_DIR_PIN, Y_STEP_PIN, Y_ENABLE_PIN, Y_MIN_INPUT, Y_HOME_STEPS, HOME_DWELL, false);
-#if BOARD_CHOICE == WEMOSD1R32
-  Endstop endstopZ( Z_MIN_PIN, Z_DIR_PIN, Z_STEP_PIN, Z_ENABLE_PIN, Z_MIN_INPUT, Z_HOME_STEPS, HOME_DWELL, false);
-#else
-  Endstop endstopZ(Z_MIN_PIN, Z_DIR_PIN, Z_STEP_PIN, Z_ENABLE_PIN, Z_MIN_INPUT, Z_HOME_STEPS, HOME_DWELL, false);
-#endif
+Endstop endstopZ(Z_MIN_PIN, Z_DIR_PIN, Z_STEP_PIN, Z_ENABLE_PIN, Z_MIN_INPUT, Z_HOME_STEPS, HOME_DWELL, false);
 
-//EQUIPMENT OBJECTS
-#if GRIPPER == SERVO
-  Servo_Gripper servo_gripper(SERVO_PIN, SERVO_GRIP_DEGREE, SERVO_UNGRIP_DEGREE);
-#elif GRIPPER == BYJ
-  BYJ_Gripper byj_gripper(BYJ_PIN_0, BYJ_PIN_1, BYJ_PIN_2, BYJ_PIN_3, BYJ_GRIP_STEPS);
-#endif
+//EQUIPMENT OBJECTS (SERVO GRIPPER ONLY)
+Servo_Gripper servo_gripper(SERVO_PIN, SERVO_GRIP_DEGREE, SERVO_UNGRIP_DEGREE);
 Equipment laser(LASER_PIN);
 Equipment pump(PUMP_PIN);
 Equipment led(LED_PIN);
@@ -75,15 +50,7 @@ Interpolation interpolator;
 Queue<Cmd> queue(QUEUE_SIZE);
 Command command;
 
-//PS4 CONTROLLER OBJECT FOR ESP32
-#if BOARD_CHOICE == WEMOSD1R32 && ESP32_JOYSTICK == DUALSHOCK4
-  #include "controller_ps4.h"
-  Controller_PS4 controller_ps4(PS4_MAC);
-#endif
-#if BOARD_CHOICE == WEMOSD1R32 && ESP32_JOYSTICK == WIIMOTE
-  #include "controller_wiimote.h"
-  Controller_Wiimote controller_wiimote;
-#endif
+
 
 void setup()
 {
@@ -97,12 +64,6 @@ void setup()
   // pinMode(Z_MIN_PIN, INPUT);  // 设置GPIO15为输入模式
 
 
-  #if BOARD_CHOICE == WEMOSD1R32 && ESP32_JOYSTICK == DUALSHOCK4
-    controller_ps4.setup();
-  #endif
-  #if BOARD_CHOICE == WEMOSD1R32 && ESP32_JOYSTICK == WIIMOTE
-    controller_wiimote.setup();
-  #endif
   stepperHigher.setPositionRad(PI / 2.0); // 90°
   stepperLower.setPositionRad(0);         // 0°
   stepperRotate.setPositionRad(0);        // 0°
@@ -175,12 +136,6 @@ void loop() {
     led.cmdOff();
   }
 
-  #if BOARD_CHOICE == WEMOSD1R32 && ESP32_JOYSTICK == DUALSHOCK4
-    ps4_controller_loop();
-  #endif
-  #if BOARD_CHOICE == WEMOSD1R32 && ESP32_JOYSTICK == WIIMOTE
-    wiimote_controller_loop();
-  #endif
 }
 
 
@@ -352,110 +307,4 @@ void homeSequence_UNO(){
   Logger::logINFO("HOMING COMPLETE");
 }
 
-#if BOARD_CHOICE == WEMOSD1R32 && ESP32_JOYSTICK == DUALSHOCK4
-void ps4_controller_loop(){
-  controller_ps4.update();
-  interpolator.speed_profile = 0;
-  if (controller_ps4.buttons[PS4_CROSS]){if (GRIPPER == SERVO){servo_gripper.cmdOn();}}
-  if (controller_ps4.buttons[PS4_CIRCLE]){if (GRIPPER == SERVO){servo_gripper.cmdOff();}}
-  if (controller_ps4.buttons[PS4_OPTIONS]){setStepperEnable(true);}
-  if (controller_ps4.buttons[PS4_SHARE]){setStepperEnable(false);}
-  if (controller_ps4.buttons[PS4_TOUCHPAD]){homeSequence_UNO();}
-  float x_distance = 0.0;
-  float y_distance = 0.0;
-  float z_distance = 0.0;
-  float e_distance = 0.0;
-  if (abs(controller_ps4.buttons[PS4_RSTICKY]) > 10){
-//    z_distance = float(controller_ps4.buttons[PS4_RSTICKY]) / 2500.0;
-    z_distance = float(controller_ps4.buttons[PS4_RSTICKY])*JOYSTICK_SPEED_MULTIPLIER / 2500.0;
-  }
-  if (abs(controller_ps4.buttons[PS4_LSTICKX]) > 10){
-    float turn_rad = float(controller_ps4.buttons[PS4_LSTICKX])*JOYSTICK_SPEED_MULTIPLIER / 300000.0;
-    x_distance += sin(geometry.getRotRad() + turn_rad) * geometry.getHypot() - interpolator.getXPosmm();
-    y_distance += cos(geometry.getRotRad() + turn_rad) * geometry.getHypot() - interpolator.getYPosmm();
-  }
-  if (abs(controller_ps4.buttons[PS4_LSTICKY]) > 10){
-    float hp_distance = float(controller_ps4.buttons[PS4_LSTICKY])*JOYSTICK_SPEED_MULTIPLIER / 2500.0;
-    float hp_ratio = hp_distance / geometry.getHypot();
-    x_distance += interpolator.getXPosmm() * hp_ratio;
-    y_distance += interpolator.getYPosmm() * hp_ratio;
-  }
-  if (abs(controller_ps4.buttons[PS4_L2VALUE]) > 10){
-    e_distance -= float(controller_ps4.buttons[PS4_L2VALUE])*JOYSTICK_SPEED_MULTIPLIER/ 10000.0;
-  }
-  if (abs(controller_ps4.buttons[PS4_R2VALUE]) > 10){
-    e_distance += float(controller_ps4.buttons[PS4_R2VALUE])*JOYSTICK_SPEED_MULTIPLIER/ 10000.0;
-  }
-  if (x_distance || y_distance || z_distance || e_distance){
-    interpolator.speed_profile = 0;
-    interpolator.setInterpolation(interpolator.getXPosmm()+x_distance, interpolator.getYPosmm()+y_distance, interpolator.getZPosmm()+z_distance, interpolator.getEPosmm()+e_distance, 5);
-  }
-}
-#endif
 
-#if BOARD_CHOICE == WEMOSD1R32 && ESP32_JOYSTICK == WIIMOTE
-void wiimote_controller_loop(){
-  controller_wiimote.update();
-  interpolator.speed_profile = 0;
-  if (controller_wiimote.button == WII_A && GRIPPER == SERVO){
-    if (!servo_gripper.isOn()){
-      servo_gripper.cmdOn();
-    } else {
-      servo_gripper.cmdOff();
-    }
-  }
-  if (controller_wiimote.button == WII_PLUS){setStepperEnable(true);}
-  if (controller_wiimote.button == WII_MINUS){setStepperEnable(false);}
-  if (controller_wiimote.button == WII_HOME){homeSequence_UNO();}
-  
-  float x_distance = 0.0;
-  float y_distance = 0.0;
-  float z_distance = 0.0;
-  float e_distance = 0.0;
-  float hp_distance = 0.0;
-  float turn_rad = 0.0;
-
-  if (controller_wiimote.button == WII_LEFT || controller_wiimote.button == WII_LEFT+WII_DOWN || controller_wiimote.button == WII_LEFT+WII_UP){
-    hp_distance = float(0.015 * JOYSTICK_SPEED_MULTIPLIER);
-  }
-  if (controller_wiimote.button == WII_RIGHT || controller_wiimote.button == WII_RIGHT+WII_DOWN || controller_wiimote.button == WII_RIGHT+WII_UP){
-    hp_distance = float(-0.015 * JOYSTICK_SPEED_MULTIPLIER);
-  }
-  if (controller_wiimote.button == WII_DOWN || controller_wiimote.button == WII_LEFT+WII_DOWN || controller_wiimote.button == WII_RIGHT+WII_DOWN){
-    turn_rad = float(-0.0001 * JOYSTICK_SPEED_MULTIPLIER);
-  }
-  if (controller_wiimote.button == WII_UP || controller_wiimote.button == WII_LEFT+WII_UP || controller_wiimote.button == WII_RIGHT+WII_UP){
-    turn_rad = float(0.0001 * JOYSTICK_SPEED_MULTIPLIER);
-  }
-  if (controller_wiimote.button == WII_LEFT+WII_B){
-    z_distance = float (0.015 * JOYSTICK_SPEED_MULTIPLIER);
-  }
-  if (controller_wiimote.button == WII_RIGHT+WII_B){
-    z_distance = float (-0.015 * JOYSTICK_SPEED_MULTIPLIER);
-  }
-  if (controller_wiimote.button == WII_DOWN+WII_B){
-    e_distance = float (-0.008 * JOYSTICK_SPEED_MULTIPLIER);
-  }
-  if (controller_wiimote.button == WII_UP+WII_B){
-    e_distance = float (0.008 * JOYSTICK_SPEED_MULTIPLIER);
-  }
-  if (abs(hp_distance) > 0.0){
-    float hp_ratio = hp_distance / geometry.getHypot();
-    x_distance += interpolator.getXPosmm() * hp_ratio;
-    y_distance += interpolator.getYPosmm() * hp_ratio;    
-  }
-  if (abs(turn_rad) > 0.0){
-    x_distance += sin(geometry.getRotRad() + turn_rad) * geometry.getHypot() - interpolator.getXPosmm();
-    y_distance += cos(geometry.getRotRad() + turn_rad) * geometry.getHypot() - interpolator.getYPosmm();    
-  }
-
-  if (x_distance || y_distance || z_distance || e_distance){
-    interpolator.speed_profile = 0;
-    interpolator.setInterpolation(interpolator.getXPosmm()+x_distance, interpolator.getYPosmm()+y_distance, interpolator.getZPosmm()+z_distance, interpolator.getEPosmm()+e_distance, 5);
-    //SOLUTION FOR WIIMOTE Y<0.05 FREEZE ISSUE
-    if (interpolator.getYPosmm() < 0.5) {
-      interpolator.setInterpolation(interpolator.getXPosmm(), 0.5, interpolator.getZPosmm(), interpolator.getEPosmm(), 5);
-    }
-  }
-}
-#endif
