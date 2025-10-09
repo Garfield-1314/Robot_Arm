@@ -19,6 +19,8 @@
 //INCLUDE SERVO GRIPPER ONLY
 #include "servo_gripper.h"
 
+#include "ad_key.h" // 引入AD按键检测模块
+
 // ONLY INCLUDE ESP32 PINOUT & CONFIG
 #include "pinout/pinout_wemosD1R32.h"
 #include "config_esp32.h"
@@ -29,7 +31,7 @@ RampsStepper stepperLower(Y_STEP_PIN, Y_DIR_PIN, Y_ENABLE_PIN, INVERSE_Y_STEPPER
 RampsStepper stepperRotate(Z_STEP_PIN, Z_DIR_PIN, Z_ENABLE_PIN, INVERSE_Z_STEPPER, MAIN_GEAR_TEETH, MOTOR_GEAR_TEETH, MICROSTEPS, STEPS_PER_REV);
 #if RAIL
   RampsStepper stepperRail(E0_STEP_PIN, E0_DIR_PIN, E0_ENABLE_PIN, INVERSE_E0_STEPPER, MAIN_GEAR_TEETH, MOTOR_GEAR_TEETH, MICROSTEPS, STEPS_PER_REV);
-  #define SERVO_PIN 23 // REDEFINE SERVO_PIN FOR RAIL // SHARE WITH Z_MIN_PIN
+  #define SERVO_PIN 36 // REDEFINE SERVO_PIN FOR RAIL // SHARE WITH Z_MIN_PIN
   Endstop endstopE0(E0_MIN_PIN, E0_DIR_PIN, E0_STEP_PIN, E0_ENABLE_PIN, E0_MIN_INPUT, E0_HOME_STEPS, HOME_DWELL, false);
 #endif
 //ENDSTOP OBJECTS (ESP32 ONLY)
@@ -38,6 +40,9 @@ Endstop endstopY(Y_MIN_PIN, Y_DIR_PIN, Y_STEP_PIN, Y_ENABLE_PIN, Y_MIN_INPUT, Y_
 Endstop endstopZ(Z_MIN_PIN, Z_DIR_PIN, Z_STEP_PIN, Z_ENABLE_PIN, Z_MIN_INPUT, Z_HOME_STEPS, HOME_DWELL, false);
 
 //EQUIPMENT OBJECTS (SERVO GRIPPER ONLY)
+
+// ADKey按键对象示例（使用pinout定义）
+ADKey adKey(ADKEY_PIN);
 Servo_Gripper servo_gripper(SERVO_PIN, SERVO_GRIP_DEGREE, SERVO_UNGRIP_DEGREE);
 Equipment laser(LASER_PIN);
 Equipment pump(PUMP_PIN);
@@ -57,13 +62,9 @@ void setup()
   Serial.begin(BAUD);
   Serial.print(F("Free heap: "));
   Serial.println(ESP.getFreeHeap());
-  // pinMode(Z_DIR_PIN, OUTPUT);
-  // pinMode(Z_STEP_PIN, OUTPUT);
-  // digitalWrite(Z_DIR_PIN, HIGH);
+  // 初始化ADKey
+  adKey.begin();
   
-  // pinMode(Z_MIN_PIN, INPUT);  // 设置GPIO15为输入模式
-
-
   stepperHigher.setPositionRad(PI / 2.0); // 90°
   stepperLower.setPositionRad(0);         // 0°
   stepperRotate.setPositionRad(0);        // 0°
@@ -71,7 +72,7 @@ void setup()
   stepperRail.setPosition(0);
   #endif
   if (HOME_ON_BOOT) { //HOME DURING SETUP() IF HOME_ON_BOOT ENABLED
-    homeSequence(); 
+    homeSequence_UNO(); 
     Logger::logINFO("ROBOT ONLINE");
   } else {
     setStepperEnable(false); //ROBOT ADJUSTABLE BY HAND AFTER TURNING ON
@@ -94,10 +95,11 @@ void setup()
 int flag = 0;
 
 void loop() {
-
-  // int buttonState = digitalRead(Z_MIN_PIN);  // 读取GPIO15的电平状态
-  // Serial.println(buttonState);  // 打印读取的状态（0 或 1）
-  // delay(100);
+  // 读取ADKey原始值和按键编号
+  int adRaw = adKey.readRaw();
+  Serial.print("ADKey Raw: ");
+  Serial.print(adRaw);
+  Serial.print("\r\n");
 
   interpolator.updateActualPosition();
   geometry.set(interpolator.getXPosmm(), interpolator.getYPosmm(), interpolator.getZPosmm());
@@ -117,9 +119,7 @@ void loop() {
 
   if (!queue.isFull()) {
     if (command.handleGcode()) {
-      // Serial.print(F("Free heap: 0"));
       queue.push(command.getCmd());
-      // Serial.print(F("Free heap: 1"));
     }
   }
   if ((!queue.isEmpty()) && interpolator.isFinished()) {
@@ -128,7 +128,7 @@ void loop() {
       Serial.println(PRINT_REPLY_MSG);
     }
   }
-
+  
   if (millis() % 500 < 250) {
     led.cmdOn();
   }
@@ -139,10 +139,7 @@ void loop() {
 }
 
 
-
-
 void executeCommand(Cmd cmd) {
-
   if (cmd.id == -1) {
     printErr();
     return;
@@ -165,18 +162,9 @@ void executeCommand(Cmd cmd) {
       interpolator.setInterpolation(cmd.valueX, cmd.valueY, cmd.valueZ, cmd.valueE, cmd.valueF);
       Logger::logINFO("LINEAR MOVE: [X:" + String(cmd.valueX-posoffset.xmm) + " Y:" + String(cmd.valueY-posoffset.ymm) + " Z:" + String(cmd.valueZ-posoffset.zmm) + " E:" + String(cmd.valueE-posoffset.emm)+"]");
       flag = 1;
-      // Logger::logINFO(String(flag));
       break;
     case 4: cmdDwell(cmd); break;
-    case 28: 
-      // Serial.print(F("HOMING"));
-      if (BOARD_CHOICE == UNO || BOARD_CHOICE == WEMOSD1R32){
-        homeSequence_UNO();
-        break;
-      } else {
-        homeSequence();
-        break;
-      }
+    case 28: homeSequence_UNO();break;
     case 90: command.cmdToAbsolute(); break; // ABSOLUTE COORDINATE MODE
     case 91: command.cmdToRelative(); break; // RELATIVE COORDINATE MODE
     case 92: 
@@ -192,17 +180,9 @@ void executeCommand(Cmd cmd) {
     case 1: pump.cmdOn(); break;
     case 2: pump.cmdOff(); break;
     case 3: 
-      #if GRIPPER == BYJ
-        byj_gripper.cmdOn(); break;
-      #elif GRIPPER == SERVO
         servo_gripper.cmdOn(); break;
-      #endif
     case 5:
-      #if GRIPPER == BYJ
-        byj_gripper.cmdOff(); break;
-      #elif GRIPPER == SERVO
         servo_gripper.cmdOff(); break;
-      #endif
     case 6: laser.cmdOn(); break; 
     case 7: laser.cmdOff(); break;
     case 17: setStepperEnable(true); break;
@@ -252,29 +232,6 @@ void setStepperEnable(bool enable){
   fan.enable(enable);
 }
 
-void homeSequence(){
-  setStepperEnable(false);
-  fan.enable(true);
-  if (HOME_Y_STEPPER && HOME_X_STEPPER){
-    endstopY.home(!INVERSE_Y_STEPPER);
-    endstopX.home(!INVERSE_X_STEPPER);
-  } 
-  else {
-    setStepperEnable(true);
-    endstopY.homeOffset(!INVERSE_Y_STEPPER);
-    endstopX.homeOffset(!INVERSE_X_STEPPER);
-  }
-  if (HOME_Z_STEPPER){
-    endstopZ.home(!INVERSE_Z_STEPPER);
-  }
-  #if RAIL
-    if (HOME_E0_STEPPER){
-      endstopE0.home(!INVERSE_E0_STEPPER);
-    }
-  #endif
-  interpolator.setInterpolation(INITIAL_X, INITIAL_Y, INITIAL_Z, INITIAL_E0, INITIAL_X, INITIAL_Y, INITIAL_Z, INITIAL_E0);
-  Logger::logINFO("HOMING COMPLETE");
-}
 
 //DUE TO UNO CNC SHIELD LIMIT, 1 EN PIN SERVES 3 MOTORS, HENCE DIFFERENT HOMESEQUENCE IS REQUIRED
 void homeSequence_UNO(){
