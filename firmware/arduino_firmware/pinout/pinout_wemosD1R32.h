@@ -28,16 +28,15 @@
 #define E1_DIR_PIN         -1
 #define E1_ENABLE_PIN      -1
 
-#define BYJ_PIN_0          -1
-#define BYJ_PIN_1          -1
-#define BYJ_PIN_2          -1
-#define BYJ_PIN_3          -1
 
 #define SERVO_PIN          36 //SERVO_PIN FOR STATIONARY
 
 #define PUMP_PIN           45
 #define LASER_PIN          -1
-#define LED_PIN            -1
+#define LED_PIN            1
+
+
+#define ADKEY_PIN          10  // ADKey 检测IO口定义
 
 #define SDPOWER            -1
 #define SDSS               -1
@@ -49,5 +48,7 @@
 
 #define TEMP_0_PIN         -1
 #define TEMP_1_PIN         -1
+
+
 
 #endif
