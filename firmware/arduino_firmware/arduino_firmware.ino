@@ -55,8 +55,6 @@ Interpolation interpolator;
 Queue<Cmd> queue(QUEUE_SIZE);
 Command command;
 
-
-
 void setup()
 {
   Serial.begin(BAUD);

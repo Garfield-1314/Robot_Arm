@@ -1,6 +1,6 @@
 
 # 导入硬件相关库
-from pyb import UART, Servo, ADC   # 串口、舵机、ADC模块
+from pyb import UART, ADC   # 串口、舵机、ADC模块
 import time, re                    # 时间和正则表达式模块
 import sensor                      # 摄像头模块
 
@@ -23,7 +23,7 @@ x_max = 280        # X轴最大坐标
 x_min = -280       # X轴最小坐标
 y_max = 280        # Y轴最大坐标
 y_min = -280       # Y轴最小坐标
-Servo_max = 60     # 舵机夹爪最大角度
+Servo_max = 76     # 舵机夹爪最大角度
 Servo_min = 0      # 舵机夹爪最小角度
 
 
@@ -80,10 +80,11 @@ class Robot:
             ad = round((filtered[mid_idx - 1] + filtered[mid_idx]) / 2, 2)
         else:
             ad = round(filtered[mid_idx], 2)
+        # print(ad)
         # 根据AD值区间判断按键功能
         if 0.3 > ad > 0.18:
             self.z = self.z + 2         # Z轴上升
-        elif ad < 0.1:
+        elif ad < 0.06:
             self.z = self.z - 2         # Z轴下降
         elif 1.7 > ad > 1.4:
             self.y = self.y + 2         # Y轴前进
@@ -116,6 +117,7 @@ class Robot:
         self.x = 0                                       # 初始X坐标
         self.y = 174                                     # 初始Y坐标
         self.z = 292                                     # 初始Z坐标
+        self.angle = 0
 
     def home_setting(self):
         """
@@ -131,14 +133,14 @@ class Robot:
             if self.uart1.any():
                 data = self.uart1.read()
                 string_data = data.decode('utf-8').strip()
-                self.Servo(45)
+                self.angle = 0
                 self.x = 0
                 self.y = 174
                 self.z = 292
                 print(string_data)
                 break
             if time.ticks_diff(time.ticks_ms(), start) > timeout:
-                self.Servo(45)
+                self.angle = 0
                 self.x = 0
                 self.y = 174
                 self.z = 292
@@ -208,25 +210,19 @@ class Robot:
         print(data_to_send)
         self.uart1.write(data_to_send)
 
-    def Servo(self, pwm):
+    def Servo(self, angle):
         """
         控制主板舵机角度，发送M280指令。
         :param pwm: 舵机PWM值
         """
-        data_to_send = "M280 P{}\r\n".format(pwm)
-        print(data_to_send)
-        self.uart1.write(data_to_send)
-        while True:
-            if self.uart1.any():
-                data = self.uart1.read()
-                string_data = data.decode('utf-8').strip()
-                print(string_data)
-                break
-
-    def mv_servo(self, angle):
-        """
-        控制OPENMV拓展板上的舵机角度。
-        :param angle: 目标角度
-        """
-        self.servo.angle(angle)
+        if Servo_min < angle < Servo_max:
+            data_to_send = "M280 P{}\r\n".format(angle)
+            print(data_to_send)
+            self.uart1.write(data_to_send)
+            while True:
+                if self.uart1.any():
+                    data = self.uart1.read()
+                    string_data = data.decode('utf-8').strip()
+                    print(string_data)
+                    break
 

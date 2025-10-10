@@ -11,13 +11,11 @@ sensor.set_framesize(sensor.QQVGA)   # 设置帧大小为QQVGA（128x160），�
 sensor.skip_frames(time=2000)        # 跳过前2000ms的帧，等待摄像头稳定
 
 # 初始化机械臂和显示屏
-robot = rb.Robot(3)           # 创建机械臂对象，串口3用于通信
-print(robot)                  # 打印机械臂对象信息
-time.sleep_ms(1000)           # 延时1秒，确保初始化完成
-lcd = display.SPIDisplay()    # 创建SPI显示屏对象
-time.sleep_ms(1000)           # 延时1秒，确保显示屏初始化完成
 robot = rb.Robot(3)           # 再次初始化机械臂对象（可选，确保串口通信正常）
-# robot.home_seting()         # 机械臂复位，若异常需重启机械臂后再运行
+lcd = display.SPIDisplay()    # 创建SPI显示屏对象
+
+
+robot.home_setting()         # 机械臂复位，若异常需重启机械臂后再运行
 
 # 获取并打印机械臂当前坐标
 a = robot.get_xyz_point()     # 获取机械臂当前XYZE坐标
@@ -28,9 +26,8 @@ print(f"X:{int(a[0])} Y:{int(a[1])} Z:{int(a[2])}")  # 打印坐标信息
 # robot.set_xyz_point(0,174,277,0,0)    # 设置机械臂目标坐标（X,Y,Z,E,F）
 #                                     # E为滑轨坐标，无滑轨填0，F为速度，<5自动插值
 #                                     # x=0,y=174,z=277为复位初始坐标
-# robot.relay(True)          # 控制机械臂主板继电器
-# robot.Servo(0)             # 控制主板舵机
-# robot.mv_servo(0)          # 控制OPENMV拓展板上的抓夹舵机角度
+robot.relay(True)          # 控制机械臂主板继电器
+robot.Servo(45)             # 控制主板舵机
 
 # 主循环，持续运行
 while True:
