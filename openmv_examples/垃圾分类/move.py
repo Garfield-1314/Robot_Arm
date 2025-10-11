@@ -32,7 +32,7 @@ def move_kitchen_garbage(robot, actuator):
     time.sleep_ms(1000)
     
     # 打开夹爪准备抓取
-    robot.mv_servo(10)
+    robot.Servo(10)
     time.sleep_ms(1000)
     
     # 进一步下降接近垃圾
@@ -40,7 +40,7 @@ def move_kitchen_garbage(robot, actuator):
     time.sleep_ms(1000)
     
     # 夹紧夹爪抓取垃圾
-    robot.mv_servo(46)
+    robot.Servo(46)
     time.sleep_ms(1000)
     
     # 抬升到安全运输高度
@@ -56,7 +56,7 @@ def move_kitchen_garbage(robot, actuator):
     time.sleep_ms(1000)
     
     # 松开夹爪释放垃圾
-    robot.mv_servo(20)
+    robot.Servo(20)
     time.sleep_ms(1000)
     
     # 返回初始位置
@@ -90,7 +90,7 @@ def move_other_garbage(robot, actuator):
     time.sleep_ms(1000)
     
     # 打开夹爪
-    robot.mv_servo(10)
+    robot.Servo(10)
     time.sleep_ms(1000)
     
     # 进一步下降
@@ -98,7 +98,7 @@ def move_other_garbage(robot, actuator):
     time.sleep_ms(1000)
     
     # 夹紧垃圾
-    robot.mv_servo(46)
+    robot.Servo(46)
     time.sleep_ms(1000)
     
     # 抬升到安全高度
@@ -114,7 +114,7 @@ def move_other_garbage(robot, actuator):
     time.sleep_ms(1000)
     
     # 释放垃圾
-    robot.mv_servo(20)
+    robot.Servo(20)
     time.sleep_ms(1000)
     
     # 返回初始位置
@@ -148,7 +148,7 @@ def move_harmful_waste(robot, actuator):
     time.sleep_ms(1000)
     
     # 打开夹爪
-    robot.mv_servo(10)
+    robot.Servo(10)
     time.sleep_ms(1000)
     
     # 进一步下降
@@ -156,7 +156,7 @@ def move_harmful_waste(robot, actuator):
     time.sleep_ms(1000)
     
     # 夹紧垃圾
-    robot.mv_servo(46)
+    robot.Servo(46)
     time.sleep_ms(1000)
     
     # 抬升到安全高度
@@ -172,7 +172,7 @@ def move_harmful_waste(robot, actuator):
     time.sleep_ms(1000)
     
     # 释放垃圾
-    robot.mv_servo(20)
+    robot.Servo(20)
     time.sleep_ms(1000)
     
     # 返回初始位置
@@ -206,7 +206,7 @@ def move_recyclable_garbage(robot, actuator):
     time.sleep_ms(1000)
     
     # 打开夹爪
-    robot.mv_servo(10)
+    robot.Servo(10)
     time.sleep_ms(1000)
     
     # 进一步下降
@@ -214,7 +214,7 @@ def move_recyclable_garbage(robot, actuator):
     time.sleep_ms(1000)
     
     # 夹紧垃圾
-    robot.mv_servo(46)
+    robot.Servo(46)
     time.sleep_ms(1000)
     
     # 抬升到安全高度
@@ -230,7 +230,7 @@ def move_recyclable_garbage(robot, actuator):
     time.sleep_ms(1000)
     
     # 释放垃圾
-    robot.mv_servo(20)
+    robot.Servo(20)
     time.sleep_ms(1000)
     
     # 返回初始位置
