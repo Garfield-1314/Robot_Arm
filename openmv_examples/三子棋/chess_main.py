@@ -1,6 +1,5 @@
 # main.py
 import sensor, time,ml
-from pyb import Pin,ADC
 import Robot_arm as rb
 import chess
 import move
@@ -8,7 +7,6 @@ import move
 Actuator = 75
 
 robot = rb.Robot(3) #初始化，设置串口3为机械臂通讯串口。
-print(robot)
 # robot.home_seting()   #机械臂复位，复位运行时若有异常请重启机械臂后再次运行
 robot.set_xyz_point(0,174,220+Actuator,0,0)
 time.sleep_ms(1000)
@@ -17,10 +15,6 @@ sensor.reset()
 sensor.set_pixformat(sensor.RGB565)
 sensor.set_framesize(sensor.QVGA)
 sensor.skip_frames(time = 2000)
-
-
-# 轻触开关
-adc = ADC("P6")  # ADC初始化，必须为"P6"
 
 
 distance = 47
@@ -72,15 +66,15 @@ board = [
 
 
 #等开关按下并松开
-def wait_key():
-    ad = ((adc.read() * 3.3) / 4095)
-    while ad > 0.5:
-        ad = ((adc.read() * 3.3) / 4095)
-        # print(ad)
+def key_control():
+    while True:
         img = sensor.snapshot()
         for y in range(len(rois)):
             for x in range(len(rois[y])):
                 img.draw_rectangle(rois[y][x])
+        key = robot.ad_key_control()
+        if key != 0:
+            print(key)
 
 with open('labels_color.txt','r') as file:
     labels = [line.strip()for line in file if line.strip()]
@@ -106,7 +100,7 @@ def Net(img2):
         # 仅记录置信度高的结果
         if max_score > 0.8:
             results.append(max_label)
-            
+
 
     # 计算众数（最频繁出现的标签）
     if not results:
@@ -145,7 +139,7 @@ def get_color():
 
 a = 0
 while(True):
-    wait_key()
+    key_control()
     img = sensor.snapshot()
     for y in range(len(rois)):
         for x in range(len(rois[y])):
@@ -172,15 +166,15 @@ while(True):
     if chess.check_win(board, 'O'):
         print("你赢啦!")
         a = 0
-        wait_key()
+        key_control()
     elif chess.check_win(board, 'X'):
         print("我赢啦！")
         a = 0
-        wait_key()
+        key_control()
     elif chess.check_draw(board):
         print("平局啦！")
         a = 0
-        wait_key()
+        key_control()
     elif chess.check_turn(board) == "X":
         # 计算下一步棋子放在哪里
         line,row = chess.computer_move(board)

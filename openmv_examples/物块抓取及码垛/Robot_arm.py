@@ -1,9 +1,9 @@
 
 # 导入硬件相关库
-from pyb import UART, Servo, ADC   # 串口、舵机、ADC模块
+from pyb import UART, ADC   # 串口、舵机、ADC模块
 import time, re                    # 时间和正则表达式模块
 import sensor                      # 摄像头模块
-
+import machine                    # 机器相关模块
 # 机械臂坐标系参数
 base_h = 290 - 172 + 52            # 基准高度修正值
 Actuator = 0                       # 滑轨坐标，默认0
@@ -61,51 +61,113 @@ def parse_position(data):
 
 
 class Robot:
-    """
-    机械臂控制类，包含串口通信、舵机控制、坐标获取与设置等功能。
-    """
     def ad_key_control(self):
         """
-        通过ADC模拟按键控制机械臂动作。
-        根据AD值判断按键类型，控制机械臂XYZ移动、夹爪开合、复位等。
+        通过ADC模拟按键控制机械臂动作，集成长按功能
         """
+        LONG_PRESS_MS = 400
+        CHECK_INTERVAL_MS = 100
+        # 静态变量存储上一次动作和持续时间
+        if not hasattr(self, '_last_action'):
+            self._last_action = None
+        if not hasattr(self, '_press_time'):
+            self._press_time = 0
+
         ad_list = []
         for _ in range(20):
-            ad_list.append((self.adc.read() * 3.3) / 4095)  # 采集20次AD值
+            ad_list.append((self.adc.read() * 3.3) / 4095)
             time.sleep_ms(1)
         ad_list.sort()
-        filtered = ad_list[1:-1]  # 去除极值
+        filtered = ad_list[1:-1]
         mid_idx = len(filtered) // 2
         if len(filtered) % 2 == 0:
             ad = round((filtered[mid_idx - 1] + filtered[mid_idx]) / 2, 2)
         else:
             ad = round(filtered[mid_idx], 2)
-        # 根据AD值区间判断按键功能
-        if 0.3 > ad > 0.18:
-            self.z = self.z + 2         # Z轴上升
-        elif ad < 0.1:
-            self.z = self.z - 2         # Z轴下降
-        elif 1.7 > ad > 1.4:
-            self.y = self.y + 2         # Y轴前进
-        elif 1.3 > ad > 1:
-            self.y = self.y - 2         # Y轴后退
-        elif 0.6 > ad > 0.5:
-            self.x = self.x - 2         # X轴左移
-        elif 1 > ad > 0.8:
-            self.x = self.x + 2         # X轴右移
-        elif 2 > ad > 1.7:
-            self.angle = self.angle - 2 # 夹爪张开
-            self.Servo(self.angle)
-        elif 2.3 > ad > 2.1:
-            self.angle = self.angle + 2 # 夹爪闭合
-            self.Servo(self.angle)
-        elif 2.6 > ad > 2.45:
-            self.home_setting()         # 机械臂复位
-            time.sleep_ms(1000)
-        time.sleep_ms(100)
-        self.set_xyz_point(self.x, self.y, self.z, 0, 0)  # 更新机械臂坐标
-        self.get_xyz_point()                              # 查询机械臂坐标
 
+        a = 0
+
+        # 判断动作类型
+        if 0.3 > ad > 0.2:
+            action = "Z+"
+            a = 9
+            # print("9")
+            time.sleep_ms(200)
+
+        elif ad < 0.1:
+            action = "Z-"
+            a = 3
+            # print("3")
+            time.sleep_ms(200)
+
+        elif 1.7 > ad > 1.4:
+            action = "Y+"
+            a = 4
+            # print("4")
+            time.sleep_ms(200)
+
+        elif 1.3 > ad > 1:
+            action = "Y-"
+            a = 6
+            # print("6")
+            time.sleep_ms(200)
+
+        elif 0.6 > ad > 0.5:
+            action = "X+"
+            a = 2
+            # print("2")
+            time.sleep_ms(200)
+
+        elif 1 > ad > 0.8:
+            action = "X-"
+            a = 8
+            # print("8")
+            time.sleep_ms(200)
+
+        elif 2 > ad > 1.7:
+            action = "Open"
+            a = 1
+            # print("1")
+            time.sleep_ms(200)
+
+        elif 2.3 > ad > 2.15:
+            action = "Close"
+            a = 7
+            # print("7")  
+            time.sleep_ms(200)
+
+
+        elif 2.6 > ad > 2.45:
+            action = "Home"
+            a = 5
+            # print("5")
+            time.sleep_ms(200)
+        else:
+            action = None
+
+        if action == self._last_action and action is not None:
+            self._press_time += CHECK_INTERVAL_MS
+        else:
+            self._press_time = 0
+            self._last_action = action
+
+        # 长按判定
+        if self._press_time >= LONG_PRESS_MS and action is not None:
+            if action == "Open":
+                a = 10
+                # print("OpenMV Reset")
+
+            elif action == "Close":
+                a = 11
+                # print("long Close")
+
+            elif action == "Home":
+                a = 12
+                # print("long Home")
+                # machine.reset()
+
+            self._press_time = 0  # 触发后重置
+        return a 
     def __init__(self, nums):
         """
         构造函数，初始化串口、舵机、ADC及机械臂初始坐标。
@@ -116,6 +178,7 @@ class Robot:
         self.x = 0                                       # 初始X坐标
         self.y = 174                                     # 初始Y坐标
         self.z = 292                                     # 初始Z坐标
+        self.angle = 0                                   # 初始夹爪角度
 
     def home_setting(self):
         """
@@ -126,19 +189,21 @@ class Robot:
         print(data_to_send, "复位......")
         self.uart1.write(data_to_send)
         start = time.ticks_ms()
-        timeout = 12000  # 12秒超时
+        timeout = 15000  # 15秒超时
         while True:
             if self.uart1.any():
                 data = self.uart1.read()
                 string_data = data.decode('utf-8').strip()
-                self.Servo(45)
+                self.angle = 45
+                self.Servo(self.angle)
                 self.x = 0
                 self.y = 174
                 self.z = 292
                 print(string_data)
                 break
             if time.ticks_diff(time.ticks_ms(), start) > timeout:
-                self.Servo(45)
+                self.angle = 45
+                self.Servo(self.angle)
                 self.x = 0
                 self.y = 174
                 self.z = 292
@@ -222,11 +287,3 @@ class Robot:
                 string_data = data.decode('utf-8').strip()
                 print(string_data)
                 break
-
-    def mv_servo(self, angle):
-        """
-        控制OPENMV拓展板上的舵机角度。
-        :param angle: 目标角度
-        """
-        self.servo.angle(angle)
-
