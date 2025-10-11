@@ -23,7 +23,7 @@ x_max = 280        # X轴最大坐标
 x_min = -280       # X轴最小坐标
 y_max = 280        # Y轴最大坐标
 y_min = -280       # Y轴最小坐标
-Servo_max = 60     # 舵机夹爪最大角度
+Servo_max = 76     # 舵机夹爪最大角度
 Servo_min = 0      # 舵机夹爪最小角度
 
 
@@ -273,7 +273,7 @@ class Robot:
         print(data_to_send)
         self.uart1.write(data_to_send)
 
-    def Servo(self, pwm):
+    def Servo(self, angle):
         """
         控制主板舵机角度，发送M280指令。
         :param pwm: 舵机PWM值
