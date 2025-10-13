@@ -133,7 +133,7 @@ class Robot:
         elif 2.3 > ad > 2.15:
             action = "Close"
             a = 7
-            # print("7")  
+            # print("7")
             time.sleep_ms(200)
 
 
@@ -167,7 +167,7 @@ class Robot:
                 # machine.reset()
 
             self._press_time = 0  # 触发后重置
-        return a 
+        return a
     def __init__(self, nums):
         """
         构造函数，初始化串口、舵机、ADC及机械臂初始坐标。
@@ -278,7 +278,7 @@ class Robot:
         控制主板舵机角度，发送M280指令。
         :param pwm: 舵机PWM值
         """
-        data_to_send = "M280 P{}\r\n".format(pwm)
+        data_to_send = "M280 P{}\r\n".format(angle)
         print(data_to_send)
         self.uart1.write(data_to_send)
         while True:

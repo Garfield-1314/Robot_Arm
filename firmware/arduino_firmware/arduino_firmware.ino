@@ -1,6 +1,6 @@
 //OPENMV ROBOT ARM V1 
 //Base on 20SFFACTORY COMMUNITY ROBOT FIRMWARE VERSION: V0.81
-//Using ESP32-S3-N16-R8
+//Using ESP32-S3
 
 
 #include <Arduino.h>
@@ -15,7 +15,6 @@
 #include "equipment.h"
 #include "endstop.h"
 #include "logger.h"
-#include "fanControl.h"
 //INCLUDE SERVO GRIPPER ONLY
 #include "servo_gripper.h"
 
@@ -47,7 +46,6 @@ Servo_Gripper servo_gripper(SERVO_PIN, SERVO_GRIP_DEGREE, SERVO_UNGRIP_DEGREE);
 Equipment laser(LASER_PIN);
 Equipment pump(PUMP_PIN);
 Equipment led(LED_PIN);
-FanControl fan(FAN_PIN, FAN_DELAY);
 
 //EXECUTION & COMMAND OBJECTS
 RobotGeometry geometry(END_EFFECTOR_OFFSET, LOW_SHANK_LENGTH, HIGH_SHANK_LENGTH);
@@ -95,9 +93,9 @@ int flag = 0;
 void loop() {
   // 读取ADKey原始值和按键编号
   int adRaw = adKey.readRaw();
-  Serial.print("ADKey Raw: ");
-  Serial.print(adRaw);
-  Serial.print("\r\n");
+  // Serial.print("ADKey Raw: ");
+  // Serial.print(adRaw);
+  // Serial.print("\r\n");
 
   interpolator.updateActualPosition();
   geometry.set(interpolator.getXPosmm(), interpolator.getYPosmm(), interpolator.getZPosmm());
@@ -113,7 +111,6 @@ void loop() {
   #if RAIL
     stepperRail.update();
   #endif
-  fan.update();
 
   if (!queue.isFull()) {
     if (command.handleGcode()) {
@@ -153,7 +150,6 @@ void executeCommand(Cmd cmd) {
     switch (cmd.num) {
     case 0:
     case 1:
-      fan.enable(true);
       Point posoffset;
       posoffset = interpolator.getPosOffset();      
       cmdMove(cmd, interpolator.getPosmm(), posoffset, command.isRelativeCoord);
@@ -185,8 +181,6 @@ void executeCommand(Cmd cmd) {
     case 7: laser.cmdOff(); break;
     case 17: setStepperEnable(true); break;
     case 18: setStepperEnable(false); break;
-    case 106: fan.enable(true); break;
-    case 107: fan.enable(false); break;
     case 114: command.cmdGetPosition(interpolator.getPosmm(), interpolator.getPosOffset(), stepperHigher.getPosition(), stepperLower.getPosition(), stepperRotate.getPosition()); break;// Return the current positions of all axis 
     case 119: {
       String endstopMsg = "ENDSTOP: [X:";
@@ -227,7 +221,6 @@ void setStepperEnable(bool enable){
   #if RAIL
     stepperRail.enable(enable);
   #endif
-  fan.enable(enable);
 }
 
 

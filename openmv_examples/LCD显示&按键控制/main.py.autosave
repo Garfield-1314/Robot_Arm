@@ -45,9 +45,11 @@ def key_control():
         if key == 1:
             angle = angle + 5
             robot.Servo(angle)
+            robot.relay(True) 
         elif key == 7:
             angle = angle - 5
             robot.Servo(angle)
+            robot.relay(False) 
         elif key == 2:
             X = X - 5
             robot.set_xyz_point(X,Y,Z,0,0)
@@ -76,7 +78,7 @@ def key_control():
 while True:
     img = sensor.snapshot()                  # 拍摄一帧图像
     key_control()
-    # a = robot.get_xyz_point()     # 获取机械臂当前XYZE坐标
-    # img.draw_string(0,0, "Hello Robot!",color=(255,0,0))  # 在图像上显示欢迎语
-    # img.draw_string(0,10,f"X:{int(a[0])} Y:{int(a[1])} Z:{int(a[2])}",color=(255,0,0))
+    a = robot.get_xyz_point()     # 获取机械臂当前XYZE坐标
+    img.draw_string(0,0, "Hello Robot!",color=(255,0,0))  # 在图像上显示欢迎语
+    img.draw_string(0,10,f"X:{int(a[0])} Y:{int(a[1])} Z:{int(a[2])}",color=(255,0,0))
     lcd.write(img.copy(hint=image.ROTATE_90))            # 图像旋转90度后写入LCD显示屏

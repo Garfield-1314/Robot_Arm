@@ -9,7 +9,7 @@ import display
 Actuator = 75
 
 robot = rb.Robot(3) #初始化，设置串口3为机械臂通讯串口。
-# robot.home_seting()   #机械臂复位，复位运行时若有异常请重启机械臂后再次运行
+robot.home_setting()   #机械臂复位，复位运行时若有异常请重启机械臂后再次运行
 time.sleep_ms(1000)
 
 sensor.reset()
