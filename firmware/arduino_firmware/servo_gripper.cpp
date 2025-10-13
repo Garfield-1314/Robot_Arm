@@ -16,7 +16,6 @@ Servo_Gripper::Servo_Gripper(int pin, float grip_degree, float ungrip_degree){
   Servo servo_motor;
 }
 
-
 // 新增舵机驱动代码，IO为36
 #if BOARD_CHOICE == WEMOSD1R32
 #include <ESP32Servo.h>
