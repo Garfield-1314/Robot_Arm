@@ -276,7 +276,7 @@ class Robot:
     def Servo(self, angle):
         """
         控制主板舵机角度，发送M280指令。
-        :param pwm: 舵机PWM值
+        :param angle: 舵机角度
         """
         data_to_send = "M280 P{}\r\n".format(angle)
         print(data_to_send)
