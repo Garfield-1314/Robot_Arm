@@ -63,10 +63,10 @@ board = [
      [" "," "," "],
 ]
 
-with open('labels_color.txt','r') as file:
+with open('labels.txt','r') as file:
     labels = [line.strip()for line in file if line.strip()]
     print(labels)
-model = ml.Model("color_model.tflite", load_to_fb=True)
+model = ml.Model("model.tflite", load_to_fb=True)
 print(model)
 norm = ml.Normalization(scale = (0.0,1.0))
 
