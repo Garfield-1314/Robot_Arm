@@ -63,7 +63,7 @@ def best_move(board, player, first_player='black'):
 		else:
 			return 'white' if black_count == white_count else 'black'
 
-	def minimax(bd, is_max):
+	def minimax(bd, turn):
 		winner = check_winner(bd)
 		if winner == player:
 			return 1
@@ -72,25 +72,28 @@ def best_move(board, player, first_player='black'):
 		elif winner == 'Draw':
 			return 0
 		scores = []
+		next_turn = opponent if turn == player else player
 		for i in range(3):
 			for j in range(3):
 				if bd[i][j] is None:
-					turn = current_turn(bd)
 					bd[i][j] = turn
-					score = minimax(bd, not is_max)
+					score = minimax(bd, next_turn)
 					scores.append(score)
 					bd[i][j] = None
-		return max(scores) if is_max else min(scores)
+		if turn == player:
+			return max(scores) if scores else 0
+		else:
+			return min(scores) if scores else 0
 
-	best_score = -float('inf')
-	move = None
 	if current_turn(board) != player:
 		return None
+	best_score = -float('inf')
+	move = None
 	for i in range(3):
 		for j in range(3):
 			if board[i][j] is None:
 				board[i][j] = player
-				score = minimax(board, False)
+				score = minimax(board, opponent)
 				board[i][j] = None
 				if score > best_score:
 					best_score = score

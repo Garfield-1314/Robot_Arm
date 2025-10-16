@@ -23,7 +23,7 @@ x_max = 280        # X轴最大坐标
 x_min = -280       # X轴最小坐标
 y_max = 280        # Y轴最大坐标
 y_min = -280       # Y轴最小坐标
-Servo_max = 60     # 舵机夹爪最大角度
+Servo_max = 76     # 舵机夹爪最大角度
 Servo_min = 0      # 舵机夹爪最小角度
 
 
@@ -133,7 +133,7 @@ class Robot:
         elif 2.3 > ad > 2.15:
             action = "Close"
             a = 7
-            # print("7")  
+            # print("7")
             time.sleep_ms(200)
 
 
@@ -167,7 +167,7 @@ class Robot:
                 # machine.reset()
 
             self._press_time = 0  # 触发后重置
-        return a 
+        return a
     def __init__(self, nums):
         """
         构造函数，初始化串口、舵机、ADC及机械臂初始坐标。
@@ -279,6 +279,17 @@ class Robot:
         :param angle: 舵机角度
         """
         data_to_send = "M280 P{}\r\n".format(angle)
+        print(data_to_send)
+        self.uart1.write(data_to_send)
+        while True:
+            if self.uart1.any():
+                data = self.uart1.read()
+                string_data = data.decode('utf-8').strip()
+                print(string_data)
+                break
+
+    def Set_Endstep(self,X,Y,Z,E):
+        data_to_send = "M281 X{} Y{} Z{} E{}\r\n".format(X, Y, Z, E)
         print(data_to_send)
         self.uart1.write(data_to_send)
         while True:

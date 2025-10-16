@@ -14,6 +14,10 @@ struct Cmd {
   float valueE;
   float valueS; 
   float valueP;
+  int valueX_STEPS;
+  int valueY_STEPS;
+  int valueZ_STEPS;
+  int valueE_STEPS;
 };
 
 class Command {
