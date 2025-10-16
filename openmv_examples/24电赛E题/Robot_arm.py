@@ -92,56 +92,56 @@ class Robot:
             action = "Z+"
             a = 9
             # print("9")
-            time.sleep_ms(200)
+            time.sleep_ms(500)
 
         elif ad < 0.1:
             action = "Z-"
             a = 3
             # print("3")
-            time.sleep_ms(200)
+            time.sleep_ms(500)
 
         elif 1.7 > ad > 1.4:
             action = "Y+"
             a = 4
             # print("4")
-            time.sleep_ms(200)
+            time.sleep_ms(500)
 
         elif 1.3 > ad > 1:
             action = "Y-"
             a = 6
             # print("6")
-            time.sleep_ms(200)
+            time.sleep_ms(500)
 
         elif 0.6 > ad > 0.5:
             action = "X+"
             a = 2
             # print("2")
-            time.sleep_ms(200)
+            time.sleep_ms(500)
 
         elif 1 > ad > 0.8:
             action = "X-"
             a = 8
             # print("8")
-            time.sleep_ms(200)
+            time.sleep_ms(500)
 
         elif 2 > ad > 1.7:
             action = "Open"
             a = 1
             # print("1")
-            time.sleep_ms(200)
+            time.sleep_ms(500)
 
         elif 2.3 > ad > 2.15:
             action = "Close"
             a = 7
             # print("7")  
-            time.sleep_ms(200)
+            time.sleep_ms(500)
 
 
         elif 2.6 > ad > 2.45:
             action = "Home"
             a = 5
             # print("5")
-            time.sleep_ms(200)
+            time.sleep_ms(500)
         else:
             action = None
 
@@ -194,6 +194,7 @@ class Robot:
             if self.uart1.any():
                 data = self.uart1.read()
                 string_data = data.decode('utf-8').strip()
+                self.relay(False)
                 self.angle = 45
                 self.Servo(self.angle)
                 self.x = 0
@@ -202,6 +203,7 @@ class Robot:
                 print(string_data)
                 break
             if time.ticks_diff(time.ticks_ms(), start) > timeout:
+                self.relay(False)
                 self.angle = 45
                 self.Servo(self.angle)
                 self.x = 0

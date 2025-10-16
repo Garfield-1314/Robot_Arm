@@ -23,22 +23,24 @@
 // ONLY INCLUDE ESP32 PINOUT & CONFIG
 #include "pinout/pinout_wemosD1R32.h"
 #include "config_esp32.h"
+#include "NVS.h"
+NVS nvs;
 
 //STEPPER OBJECTS (ESP32 ONLY)
 RampsStepper stepperHigher(X_STEP_PIN, X_DIR_PIN, X_ENABLE_PIN, INVERSE_X_STEPPER, MAIN_GEAR_TEETH, MOTOR_GEAR_TEETH, MICROSTEPS, STEPS_PER_REV);
 RampsStepper stepperLower(Y_STEP_PIN, Y_DIR_PIN, Y_ENABLE_PIN, INVERSE_Y_STEPPER, MAIN_GEAR_TEETH, MOTOR_GEAR_TEETH, MICROSTEPS, STEPS_PER_REV);
 RampsStepper stepperRotate(Z_STEP_PIN, Z_DIR_PIN, Z_ENABLE_PIN, INVERSE_Z_STEPPER, MAIN_GEAR_TEETH, MOTOR_GEAR_TEETH, MICROSTEPS, STEPS_PER_REV);
+
+
 #if RAIL
   RampsStepper stepperRail(E0_STEP_PIN, E0_DIR_PIN, E0_ENABLE_PIN, INVERSE_E0_STEPPER, MAIN_GEAR_TEETH, MOTOR_GEAR_TEETH, MICROSTEPS, STEPS_PER_REV);
   #define SERVO_PIN 36 // REDEFINE SERVO_PIN FOR RAIL // SHARE WITH Z_MIN_PIN
-  Endstop endstopE0(E0_MIN_PIN, E0_DIR_PIN, E0_STEP_PIN, E0_ENABLE_PIN, E0_MIN_INPUT, E0_HOME_STEPS, HOME_DWELL, false);
+  Endstop* endstopE0 = nullptr;
 #endif
 //ENDSTOP OBJECTS (ESP32 ONLY)
-Endstop endstopX(X_MIN_PIN, X_DIR_PIN, X_STEP_PIN, X_ENABLE_PIN, X_MIN_INPUT, X_HOME_STEPS, HOME_DWELL, false);
-Endstop endstopY(Y_MIN_PIN, Y_DIR_PIN, Y_STEP_PIN, Y_ENABLE_PIN, Y_MIN_INPUT, Y_HOME_STEPS, HOME_DWELL, false);
-Endstop endstopZ(Z_MIN_PIN, Z_DIR_PIN, Z_STEP_PIN, Z_ENABLE_PIN, Z_MIN_INPUT, Z_HOME_STEPS, HOME_DWELL, false);
-
-//EQUIPMENT OBJECTS (SERVO GRIPPER ONLY)
+Endstop* endstopX = nullptr;
+Endstop* endstopY = nullptr;
+Endstop* endstopZ = nullptr;
 
 // ADKey按键对象示例（使用pinout定义）
 ADKey adKey(ADKEY_PIN);
@@ -56,17 +58,27 @@ Command command;
 void setup()
 {
   Serial.begin(BAUD);
-  Serial.print(F("Free heap: "));
-  Serial.println(ESP.getFreeHeap());
   // 初始化ADKey
   adKey.begin();
-  
+  nvs.begin("home_steps"); // 初始化NVS存储
+
+  int x_home_steps = nvs.getInt("home_steps0", 0);
+  int y_home_steps = nvs.getInt("home_steps1", 0);
+  int z_home_steps = nvs.getInt("home_steps2", 0);
+  int e0_home_steps = nvs.getInt("home_steps3", 0);
+
+  endstopX = new Endstop(X_MIN_PIN, X_DIR_PIN, X_STEP_PIN, X_ENABLE_PIN, X_MIN_INPUT, x_home_steps, HOME_DWELL, false);
+  endstopY = new Endstop(Y_MIN_PIN, Y_DIR_PIN, Y_STEP_PIN, Y_ENABLE_PIN, Y_MIN_INPUT, y_home_steps, HOME_DWELL, false);
+
+  endstopZ = new Endstop(Z_MIN_PIN, Z_DIR_PIN, Z_STEP_PIN, Z_ENABLE_PIN, Z_MIN_INPUT, z_home_steps, HOME_DWELL, false);
+  #if RAIL
+    endstopE0 = new Endstop(E0_MIN_PIN, E0_DIR_PIN, E0_STEP_PIN, E0_ENABLE_PIN, E0_MIN_INPUT, e0_home_steps, HOME_DWELL, false);
+    stepperRail.setPosition(0);
+  #endif
+
   stepperHigher.setPositionRad(PI / 2.0); // 90°
   stepperLower.setPositionRad(0);         // 0°
   stepperRotate.setPositionRad(0);        // 0°
-  #if RAIL
-  stepperRail.setPosition(0);
-  #endif
   if (HOME_ON_BOOT) { //HOME DURING SETUP() IF HOME_ON_BOOT ENABLED
     homeSequence_UNO(); 
     Logger::logINFO("ROBOT ONLINE");
@@ -88,14 +100,12 @@ void setup()
   interpolator.setInterpolation(INITIAL_X, INITIAL_Y, INITIAL_Z, INITIAL_E0, INITIAL_X, INITIAL_Y, INITIAL_Z, INITIAL_E0);
 }
 
+
 int flag = 0;
 
 void loop() {
   // 读取ADKey原始值和按键编号
   int adRaw = adKey.readRaw();
-  // Serial.print("ADKey Raw: ");
-  // Serial.print(adRaw);
-  // Serial.print("\r\n");
 
   interpolator.updateActualPosition();
   geometry.set(interpolator.getXPosmm(), interpolator.getYPosmm(), interpolator.getZPosmm());
@@ -184,18 +194,16 @@ void executeCommand(Cmd cmd) {
     case 114: command.cmdGetPosition(interpolator.getPosmm(), interpolator.getPosOffset(), stepperHigher.getPosition(), stepperLower.getPosition(), stepperRotate.getPosition()); break;// Return the current positions of all axis 
     case 119: {
       String endstopMsg = "ENDSTOP: [X:";
-      endstopMsg += String(endstopX.state());
+  endstopMsg += String(endstopX->state());
       endstopMsg += " Y:";
-      endstopMsg += String(endstopY.state());
+  endstopMsg += String(endstopY->state());
       endstopMsg += " Z:";
-      endstopMsg += String(endstopZ.state());
+  endstopMsg += String(endstopZ->state());
       #if RAIL
         endstopMsg += " E:";
         endstopMsg += String(endstopE0.state());
       #endif
       endstopMsg += "]";
-      //ORIGINAL LOG STRING UNDESIRABLE FOR UNO PROCESSING
-      //Logger::logINFO("ENDSTOP STATE: [UPPER_SHANK(X):"+String(endstopX.state())+" LOWER_SHANK(Y):"+String(endstopY.state())+" ROTATE_GEAR(Z):"+String(endstopZ.state())+"]");
       Logger::logINFO(endstopMsg);
       break;}
     case 205:
@@ -205,6 +213,16 @@ void executeCommand(Cmd cmd) {
     case 280:
       servo_gripper.set_degree(cmd.valueP);
       Logger::logINFO("SERVO: [" + String(cmd.valueP) + "]");
+      break;
+    case 281:
+      Logger::logINFO("HOMING STEPS: x[" + String(cmd.valueX) + "], y[" + String(cmd.valueY) + "], z[" + String(cmd.valueZ) + "]");
+      nvs.putInt("home_steps0", cmd.valueX);
+      nvs.putInt("home_steps1", cmd.valueY);
+      nvs.putInt("home_steps2", cmd.valueZ);
+      #if RAIL
+        nvs.putInt("home_steps3", cmd.valueE);
+      #endif
+      ESP.restart();
       break;
     default: printErr();
     }
@@ -226,25 +244,29 @@ void setStepperEnable(bool enable){
 
 //DUE TO UNO CNC SHIELD LIMIT, 1 EN PIN SERVES 3 MOTORS, HENCE DIFFERENT HOMESEQUENCE IS REQUIRED
 void homeSequence_UNO(){
+  #if RAIL
+    endstopE0(E0_MIN_PIN, E0_DIR_PIN, E0_STEP_PIN, E0_ENABLE_PIN, E0_MIN_INPUT, nvs.getInt("home_steps3",0), HOME_DWELL, false);
+  #endif
+  
   #if GRIPPER == SERVO
   if (servo_gripper.readDegree() != SERVO_UNGRIP_DEGREE){
     servo_gripper.cmdOff();
   }
   #endif
   if (HOME_Y_STEPPER && HOME_X_STEPPER){
-    while (!endstopY.state() || !endstopX.state()){
-      endstopX.oneStepToEndstop(!INVERSE_X_STEPPER);
-      endstopY.oneStepToEndstop(!INVERSE_Y_STEPPER);
+    while (!endstopY->state() || !endstopX->state()){
+      endstopX->oneStepToEndstop(!INVERSE_X_STEPPER);
+      endstopY->oneStepToEndstop(!INVERSE_Y_STEPPER);
     }
-    endstopX.homeOffset(!INVERSE_X_STEPPER);
-    endstopY.homeOffset(!INVERSE_Y_STEPPER);
+    endstopX->homeOffset(!INVERSE_X_STEPPER);
+    endstopY->homeOffset(!INVERSE_Y_STEPPER);
   } else {
-    setStepperEnable(true);
-    endstopX.homeOffset(!INVERSE_X_STEPPER);
-    endstopY.homeOffset(!INVERSE_Y_STEPPER);
+  setStepperEnable(true);
+  endstopX->homeOffset(!INVERSE_X_STEPPER);
+  endstopY->homeOffset(!INVERSE_Y_STEPPER);
   }
   if (HOME_Z_STEPPER){
-    endstopZ.home(INVERSE_Z_STEPPER); //INDICATE STEPPER HOMING DIRECDTION
+    endstopZ->home(INVERSE_Z_STEPPER); //INDICATE STEPPER HOMING DIRECDTION
   }
   #if RAIL
     if (HOME_E0_STEPPER){

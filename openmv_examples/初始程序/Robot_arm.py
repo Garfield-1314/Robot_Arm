@@ -287,3 +287,14 @@ class Robot:
                 string_data = data.decode('utf-8').strip()
                 print(string_data)
                 break
+
+    def Set_Endstep(self,X,Y,Z,E):
+        data_to_send = "M281 X{} Y{} Z{} E{}\r\n".format(X, Y, Z, E)
+        print(data_to_send)
+        self.uart1.write(data_to_send)
+        while True:
+            if self.uart1.any():
+                data = self.uart1.read()
+                string_data = data.decode('utf-8').strip()
+                print(string_data)
+                break

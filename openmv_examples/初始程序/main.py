@@ -11,8 +11,9 @@ sensor.skip_frames(time=2000)        # 跳过前2000ms的帧，等待摄像头�
 
 # 初始化机械臂和显示屏
 robot = rb.Robot(3)           # 创建机械臂对象，串口3用于通信
+# robot.Set_Endstep(900,1800,3780,0) #设置机械臂复位时旋转的角度
 lcd = display.SPIDisplay()    # 创建SPI显示屏对象
-# robot.home_seting()         # 机械臂复位，若异常需重启机械臂后再运行
+# robot.home_setting()         # 机械臂复位，若异常需重启机械臂后再运行
 
 # 获取并打印机械臂当前坐标
 # a = robot.get_xyz_point()     # 获取机械臂当前XYZE坐标
