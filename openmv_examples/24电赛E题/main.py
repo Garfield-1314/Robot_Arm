@@ -5,6 +5,7 @@ import chess
 import move
 import display
 import machine
+import image
 
 Actuator = 75
 
@@ -25,6 +26,14 @@ distance = 50
 block = 32
 ShiftX = 27
 ShiftY = -3
+
+
+def img_show(player):
+    img = sensor.snapshot()
+    img.draw_string(0,120,"DEMO",scale = 1  ,color=(255,0,0))  # 在图像上显示欢迎语
+    img.draw_string(0,140,f"EVEN:{int(flag)}",color=(255,0,0))
+    img.draw_string(0,160,"USER:"+player,color=(255,0,0))
+    lcd.write(img.copy(hint=image.ROTATE_90))
 
 # --------- 工具函数：深拷贝棋盘 ---------
 def deepcopy_board(src):
@@ -150,9 +159,6 @@ def choice_even():
             break
     return flag
 
-
-#等待任务选择
-choice_even()
 
 def put_piece(color,n):
     x = 1
@@ -436,30 +442,54 @@ def Even_6():
             if key !=0 and key != None :
                 break
 
+img_show('WAITING')
+#等待任务选择
+choice_even()
 
 if flag == 1:
     print("Even 1")
+    img_show('EVEN 1')
     Even_1()
 
 elif flag == 2:
     print("Even 2")
+    img_show('EVEN 2')
     Even_2()
 
 elif flag == 3:
     print("Even 3_45")
+    img_show('EVEN 3')
     Even_3()
 
 elif flag == 4:
     print("Even 4")
+    img_show('WHITE')
     Even_4()
 
 elif flag == 5:
     print("Even 5")
+    img_show('BLACK')
     Even_5()
 
 
 elif flag == 6:
     print("Even 6")
+    img_show('WHITE')
     Even_6()
 
-
+elif flag == 7:
+    color = (0,255,0)
+    while True:
+        img = sensor.snapshot()
+        get_color()
+        for line in board:
+            print(line)
+        for y in range(len(rois)):
+            for x in range(len(rois[y])):
+                if board[y][x] == "black":
+                    color = (255,0,0)
+                elif board[y][x] == "white":
+                    color = (0,0,255)
+                elif board[y][x] == None:
+                    color = (0,255,0)
+                img.draw_rectangle(rois[y][x], color=color)
