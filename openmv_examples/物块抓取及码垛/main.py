@@ -31,7 +31,7 @@ print(labels)
 
 
 # 检测框颜色（按类别区分）
-colors = [ 
+colors = [
     (255,   0,   0),    # 红
     (  0, 255,   0),    # 绿
     (255, 255,   0),    # 黄
@@ -89,13 +89,13 @@ time.sleep_ms(1000)
 Actuator = 50  # 吸盘/夹爪动作参数
 
 # 蓝色物块堆叠区参数
-atxb = -85
-atyb = 226
+atxb = -90
+atyb = 229
 b_num = 0  # 蓝色物块计数
 
 # 黄色物块堆叠区参数
-atxy = -92
-atyy = 162
+atxy = -95
+atyy = 168
 y_num = 0  # 黄色物块计数
 
 atz = 18   # 堆叠Z轴基准高度
@@ -111,8 +111,8 @@ BLUE = [(0, 41, -128, 127, -128, 127)]  # 蓝色物块LAB阈值
 
 
 # 机械臂动作函数：根据检测到的物块类别和数量进行抓取与堆叠
-def Robot_move_ai():
-    global flag, a, b_num, y_num
+def Robot_move_ai(flag,a):
+    global b_num,y_num
     # 蓝色物块抓取与堆叠流程
     if flag == "blue\r" and a >= 20:
         time.sleep_ms(1000)
@@ -130,7 +130,7 @@ def Robot_move_ai():
         time.sleep_ms(1000)
         robot.set_xyz_point(atxb,atyb,120+Actuator,0,0)
         time.sleep_ms(1000)
-        robot.set_xyz_point(atxb,atyb,25+Actuator+b_num*23,0,0)  # 堆叠高度随数量递增
+        robot.set_xyz_point(atxb,atyb,25+Actuator+b_num*25,0,0)  # 堆叠高度随数量递增
         time.sleep_ms(1000)
         robot.Servo(0)  # 放下
         time.sleep_ms(1000)
@@ -155,7 +155,7 @@ def Robot_move_ai():
         time.sleep_ms(1000)
         robot.set_xyz_point(atxy,atyy,120+Actuator,0,0)
         time.sleep_ms(1000)
-        robot.set_xyz_point(atxy,atyy,25+Actuator+y_num*23,0,0)
+        robot.set_xyz_point(atxy,atyy,25+Actuator+y_num*25,0,0)
         time.sleep_ms(1000)
         robot.Servo(0)
         time.sleep_ms(1000)
@@ -164,10 +164,10 @@ def Robot_move_ai():
         y_num = y_num + 1
 
 
-def Robot_move_blobs():
-    global flag, a, b_num, y_num
+def Robot_move_blobs(flag, a):
+    global b_num, y_num
     # 蓝色物块抓取与堆叠流程
-    if flag == 'BLUE' and a >= 60:
+    if flag == 'BLUE' and a >= 0:
         time.sleep_ms(1000)
         robot.Servo(0)
         robot.set_xyz_point(35,194,atz+Actuator,0,0)  # 移动到抓取点
@@ -180,7 +180,7 @@ def Robot_move_blobs():
         time.sleep_ms(1000)
         robot.set_xyz_point(atxb,atyb,120+Actuator,0,0)
         time.sleep_ms(1000)
-        robot.set_xyz_point(atxb,atyb,25+Actuator+b_num*23,0,0)  # 堆叠高度随数量递增
+        robot.set_xyz_point(atxb,atyb,25+Actuator+b_num*25,0,0)  # 堆叠高度随数量递增
         time.sleep_ms(1000)
         robot.Servo(0)  # 放下
         time.sleep_ms(1000)
@@ -191,7 +191,7 @@ def Robot_move_blobs():
         b_num = b_num + 1
 
     # 黄色物块抓取与堆叠流程
-    if flag == 'YELLOW' and a >= 60:
+    if flag == 'YELLOW' and a >= 0:
         time.sleep_ms(1000)
         robot.Servo(0)
         robot.set_xyz_point(35,194,atz+Actuator,0,0)
@@ -204,7 +204,7 @@ def Robot_move_blobs():
         time.sleep_ms(1000)
         robot.set_xyz_point(atxy,atyy,120+Actuator,0,0)
         time.sleep_ms(1000)
-        robot.set_xyz_point(atxy,atyy,25+Actuator+y_num*23,0,0)
+        robot.set_xyz_point(atxy,atyy,25+Actuator+y_num*25,0,0)
         time.sleep_ms(1000)
         robot.Servo(0)
         time.sleep_ms(1000)
@@ -219,6 +219,7 @@ def Robot_move_blobs():
 def main_ai():
     while True:
         a = 0  # 连续检测到目标的帧数
+        flag = 0
         while(True):
             img = sensor.snapshot()  # 拍摄一帧图像
             # 神经网络推理，返回每类物块的检测框
@@ -237,60 +238,53 @@ def main_ai():
             if flag != 0 and a >= 20:
                 print(flag,a)
                 break  # 连续检测到目标20帧后，执行机械臂动作
-
-        Robot_move_ai()  # 执行分拣与堆叠动作
+        # print(1)
+        Robot_move_ai(flag,a)  # 执行分拣与堆叠动作
 
 
 def main_blobs():
     while True:
+        a = 0
+        flag = 0
+        last_flag = 0
         while True:
             img = sensor.snapshot()  # 拍摄一帧图像
+            detected = 0
             # 检测黄色物块
             for blob in img.find_blobs([YELLOW[0]],pixels_threshold=200,area_threshold=200,merge=True,roi=ROI):
-                # 只有非圆形物块检测更稳定
-                if not blob:
-                    a = 0
-                    flag = 0
-                    continue
                 if blob:
                     img.draw_rectangle(blob.rect())
                     img.draw_cross(blob.cx(), blob.cy())
-                    print("YELLOW",blob.x(), blob.y())
                     flag = 'YELLOW'
-                    a = a + 2
+                    detected = 1
                     break
-                else:
-                    print("UNKNOWN")
             # 检测蓝色物块
-            for blob in img.find_blobs([BLUE[0]],pixels_threshold=200,area_threshold=200,merge=True,roi=ROI):
-                if not blob:
-                    a = 0
-                    flag = 0
-                    continue
-                if blob:
-                    img.draw_rectangle(blob.rect())
-                    img.draw_cross(blob.cx(), blob.cy())
-                    print("BLUE",blob.x(), blob.y())
-                    flag = 'BLUE'
-                    a = a + 2
-                    break
+            if not detected:
+                for blob in img.find_blobs([BLUE[0]],pixels_threshold=200,area_threshold=200,merge=True,roi=ROI):
+                    if blob:
+                        img.draw_rectangle(blob.rect())
+                        img.draw_cross(blob.cx(), blob.cy())
+                        flag = 'BLUE'
+                        detected = 1
+                        break
+            # 连续识别逻辑
+            if detected:
+                if last_flag == flag:
+                    a += 1
                 else:
-                    print("UNKNOWN")
-
-            # 连续检测到目标后，减少a防止误触发
-            if flag != 0:
-                if a > 0:
-                    a = a - 1
-                else:
-                    a = 0
-                    flag = 0
-                print(flag,a)
+                    a = 1
+                last_flag = flag
+            else:
+                a = 0
+                flag = 0
+                last_flag = 0
+            # 达到阈值才判定有效
+            if flag != 0 and a >= 40:
+                print(flag, a)
                 break
-
-        Robot_move_blobs()  # 执行分拣与堆叠动作
-
-        if a > 100:
-            a = 0
+        # print(2)
+        Robot_move_blobs(flag,a)  # 执行分拣与堆叠动作
+        a = 0
 
 flag = 0
 def choice_even():
@@ -316,7 +310,7 @@ def choice_even():
             break
     return flag
 #等待任务选择
-choice_even() = 0
+choice_even()
 
 if flag == 1:
     main_ai()
